@@ -1,0 +1,896 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --color-Fancyblack: #424242;
+  --color-Fancygray: #3b4149;
+  --color-Fancygreen: #1bfc06;
+  --color-Fancyyellow: #febd69;
+  --color-FancyNavyblue: #232f3e;
+  --color-Fancyharsh: #FFECEF;
+  --color-Fancytextheaders: #5C1818;
+  --color-Fancytopicheaders: #003739;
+}
+
+body {
+  font-family: 'Rubik', sans-serif;
+  background: #fafafa;
+}
+
+.border-none {
+  border: none;
+}
+
+
+.sell-product-response {
+  position: fixed;
+}
+
+/* Custom CSS to remove the dropdown arrow */
+.dropdown-toggle-no-caret::after {
+  display: none;
+}
+
+.sell-product-modal {
+  position: absolute;
+  padding: 2rem 0 2rem 0;
+  z-index: 3000;
+  top: 0;
+  background-color: rgba(14, 13, 13, 0.938);
+  width: 100%;
+}
+
+.sell-product-cancel-button {
+  color: white;
+}
+
+
+a,
+.nav-link {
+  text-decoration: none;
+  display: inline-block;
+  transition: opacity 0.3s ease-in-out;
+}
+
+a:hover,
+.nav-link:hover {
+  opacity: 0.8;
+}
+
+/* Sidebar Container */
+.nav-slide {
+  position: fixed;
+  top: 5%;
+  right: -100%;
+  /* Initially hidden */
+  width: 250px;
+  /* Adjust width as needed */
+  height: 200vh;
+  transition: right 0.5s ease-in-out;
+  z-index: 6000;
+  padding: 20px;
+}
+
+/* When Nav is Open */
+.nav-slide.open {
+  right: -8%;
+  /* Slides into view */
+}
+
+
+/* Header part */
+.header-top-strip {
+  background-color: black;
+  border-bottom: 1px solid var(--color-Fancygray);
+  position: fixed;
+  z-index: 3000;
+}
+
+.header-upper {
+  position: sticky;
+  top: 8%;
+  z-index: 2000;
+}
+
+.subheader-upper {
+  position: fixed;
+  background-color: #272829;
+  top: 12%;
+  z-index: 2000;
+}
+
+.subheader-top-strip {
+  background-color: black;
+  position: fixed;
+  top: 0;
+  border-bottom: 1px solid var(--color-Fancygray);
+  z-index: 3000;
+}
+
+.sell-something-button {
+  border: 1px solid #FEBD69;
+}
+
+.ps {
+  position: relative;
+  overflow: hidden !important;
+}
+
+.header-react-icons {
+  width: 30px;
+  height: 30px;
+  font-weight: bold;
+  color: white;
+}
+
+.navbar-react-icons {
+  width: 30px;
+  height: 30px;
+  font-weight: bold;
+  color: white;
+}
+
+.header-react-icons-add {
+  width: 20px;
+  height: 20px;
+  font-weight: bold;
+  color: #FEBD69;
+}
+
+.wishlist-react-icons {
+  width: 15px;
+  height: 15px;
+  font-weight: bold;
+  color: red;
+}
+
+.categories-react-icons-arrow {
+  width: 20px;
+  height: 20px;
+  font-weight: bold;
+  color: #646161;
+}
+
+.mobile-header-react-icons {
+  width: 20px;
+  height: 20px;
+  font-weight: bold;
+  color: white;
+}
+
+.mobile-footer-react-icons {
+  width: 20px;
+  height: 20px;
+  font-weight: bold;
+  color: white;
+}
+
+/* Add this CSS to your stylesheet or in a style tag within your component */
+
+/* Sticky header */
+
+.header-top-strip .search-for-schools {
+  z-index: 3000;
+}
+
+.product-message-modal {
+  position: fixed;
+  z-index: 3000;
+  border-radius: 20px;
+  top: 0;
+  left: 43%;
+  background-color: rgba(0, 0, 0, 0.884);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Optional: If you want to center horizontally */
+  color: #00ff00;
+  /* Bright green color */
+  padding: 20px;
+  /* Adjust the padding value as needed */
+}
+
+.button-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-modal {
+  position: fixed;
+  z-index: 3000;
+  border-radius: 20px;
+  top: 0;
+  left: 43%;
+  background-color: rgba(0, 0, 0, 0.884);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Optional: If you want to center horizontally */
+  color: #00ff00;
+  /* Bright green color */
+  padding: 20px;
+  /* Adjust the padding value as needed */
+}
+
+.second-header-upper {
+  border-top: 1px solid #FFD700;
+}
+
+.header-bottom {
+  position: sticky;
+  top: 29%;
+  z-index: 1000;
+}
+
+/* Hide upper and bottom header on scroll down */
+.header-upper.scrolled-down {
+  transform: translateY(-150%);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Hide upper and bottom header on scroll down */
+
+.header-bottom.scrolled-down {
+  transform: translateY(-250%);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Show upper and bottom header on scroll up */
+.header-upper.scrolled-up {
+  transform: translateY(30%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.header-bottom.scrolled-up {
+  transform: translateY(30%);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Add this CSS to your stylesheet or in a style tag within your component */
+
+.upper-mobile-nav {
+  position: fixed;
+  top: 0;
+  z-index: 2000;
+}
+
+.middle-mobile-nav {
+  position: fixed;
+  top: 8%;
+  z-index: 1000;
+}
+
+.mobile-footer {
+  position: fixed;
+  bottom: 0;
+  z-index: 3000;
+}
+
+/* Hide middle mobile nav on scroll down */
+.middle-mobile-nav.scrolled-down {
+  transform: translateY(-170%);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Show middle mobile nav on scroll up */
+.middle-mobile-nav.scrolled-up {
+  transform: translateY(0);
+  transition: transform 0.3s ease-in-out;
+}
+
+.mobile-footer.scrolled-down {
+  transform: translateY(0);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Show middle mobile nav on scroll up */
+.mobile-footer.scrolled-up {
+  transform: translateY(100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+
+/* Adjust padding for the main content when header is sticky */
+.mobile-sell-product-button {
+  position: fixed;
+  z-index: 2000;
+  top: 60%;
+  right: 2%;
+}
+
+
+
+
+.form-control {
+  border-color: inherit;
+  box-shadow: none;
+}
+
+.header-upper .input-group-text {
+  background-color: var(--color-Fancyyellow);
+  border: none;
+  color: var(--color-Fancyblack);
+}
+
+.header-bottom {
+  background-color: var(--color-FancyNavyblue);
+  border-bottom: 1px solid var(--color-Fancygray);
+}
+
+.mini-header-upper {
+  background-color: var(--color-Fancyblack);
+  border-bottom: 1px solid var(--color-Fancygray);
+}
+
+.mini-header-bottom {
+  background-color: var(--color-FancyNavyblue);
+  border-bottom: 1px solid var(--color-Fancygray);
+}
+
+.header-top-strip .dropdown-menu {
+  background-color: var(--color-Fancyblack);
+  width: 100%;
+  border-bottom: 1px solid #131921;
+}
+
+.header-upper .dropdown-menu {
+  background-color: var(--color-Fancyblack);
+  width: 100%;
+
+}
+
+.dropdown-menu {
+  background-color: var(--color-Fancyblack);
+  width: 100%;
+
+}
+
+.header-top-strip .dropdown-menu .dropdown-item {
+  color: white;
+  border-bottom: 1px solid wheat;
+  padding: 10px;
+}
+
+.header-upper .dropdown-menu .dropdown-item {
+  color: white;
+  border-bottom: 1px solid wheat;
+  padding: 10px;
+}
+
+.dropdown-menu .dropdown-item {
+  color: white;
+  border-bottom: 1px solid wheat;
+  padding: 10px;
+}
+
+.dropdown-toggle[data-bs-toggle]::after {
+  color: white;
+  /* Set your desired color */
+}
+
+
+
+/* Header part ends here */
+
+/* Footer Part */
+Footer {
+  background-color: black;
+}
+
+Footer:not(:first-child) {
+  border-top: 1px solid var(--color-Fancygray);
+}
+
+.footer-top-newsletter .input {
+  border: none;
+  width: 100%;
+  padding: 4px;
+  margin: 2px;
+}
+
+.footer-top-newsletter button {
+  padding: 4px;
+  margin: 3px;
+  color: white;
+  border-radius: 5px;
+  border: 1px solid var(--color-Fancyblack);
+  background-color: black;
+}
+
+.footer-top-newsletter {
+  border-radius: 5px;
+  width: 100%;
+}
+
+.footer-top-data {
+  gap: 10px;
+}
+
+.footer-top-data .sender {
+  width: 30px;
+  height: 30px;
+  font-weight: bold;
+}
+
+.social-media-links {
+  gap: 10px;
+}
+
+.social-media-links .footer-social-media-images {
+  background-color: rgba(255, 255, 255, 0.171);
+  border-radius: 50%;
+}
+
+/* Footer Part ends here   */
+
+/* Homepage */
+.loading-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 2rem 0 2rem 0;
+  z-index: 3000;
+  background-color: rgba(14, 13, 13, 0.938);
+  width: 100%;
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.categories-container {
+  height: 700px;
+  overflow-y: scroll;
+  border: 1px solid #ccc;
+  /* Optional: to visualize the container */
+}
+
+aside summary::marker {
+  font-size: 1.8em;
+  /* Make the arrow larger */
+  color: black;
+  /* Change the arrow color to black */
+}
+
+/* Optionally, if you want to ensure that the text inside the summary isn't affected */
+aside summary {
+  color: inherit;
+  /* Ensure the text color remains unchanged */
+  font-size: inherit;
+  /* Ensure the text size remains unchanged */
+}
+
+.all-round-tips {
+  position: fixed;
+  top: 20%;
+  left: 80%;
+  z-index: 5000;
+}
+
+.mobile-all-round-tips {
+  position: fixed;
+  top: 10%;
+  left: 67%;
+  z-index: 5000;
+}
+
+.homepage-hot-categories {
+  border-bottom: 1px solid silver;
+  padding: 5px;
+}
+
+.guidesvideos {
+  position: fixed;
+  z-index: 1000;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-input {
+  width: 100%;
+  /* Adjust width as needed */
+  flex: 1;
+}
+
+.search-input .react-select__control {
+  display: none
+}
+
+.search-input .react-select__indicator-separator {
+  display: none;
+}
+
+.search-input .react-select__dropdown-indicator {
+  display: none;
+}
+
+.product-card {
+  background-color: white;
+  color: black;
+}
+
+.product-card .card-price-text {
+  color: var(--color-Fancygreen);
+  font-weight: bold;
+}
+
+.product-card .card-condition-text {
+  color: var(--color-Fancyyellow);
+  font-weight: bold;
+}
+.mobile-product-card .card-condition-text {
+  color: var(--color-Fancyyellow);
+  font-weight: bold;
+}
+
+.product-card .naira {
+  width: 30px;
+  height: 30px;
+  color: var(--color-Fancygreen);
+}
+
+.product-card .mobile-naira {
+  width: 15px;
+  height: 15px;
+  color: var(--color-Fancygreen);
+}
+
+.product-card .wishlist-naira {
+  width: 15px;
+  height: 15px;
+}
+
+.mobile-product-card {
+  background-color: white;
+  color: black;
+}
+
+.mobile-product-card .card-price-text {
+  color: var(--color-Fancygreen);
+  font-weight: bold;
+}
+.mobile-product-card .mobile-naira {
+  width: 15px;
+  height: 15px;
+  color: var(--color-Fancygreen);
+}
+
+.mobile-product-card .naira {
+  width: 12px;
+  height: 12px;
+}
+
+.mobile-product-card .wishlist-naira {
+  width: 9px;
+  height: 9px;
+  color: var(--color-Fancygreen);
+}
+
+.product-card .card-person {
+  background-color: greenyellow;
+  border-radius: 10px;
+  padding: 5px;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+.product-card .mobile-card-person {
+  background-color: greenyellow;
+  border-radius: 10px;
+  padding: 5px;
+  position: absolute;
+  top: 5px;
+  left: 5px;
+}
+
+.product-card .card-person-button {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+}
+
+.product-card .mobile-card-person-button {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+}
+
+.trending-products {
+  color: #FFD700;
+  background-color: var(--color-Fancyblack);
+  display: block;
+  padding: 10px;
+}
+
+.signup-border {
+  border: 1px solid #FFB04A;
+}
+
+.contact-border {
+  border-bottom: 1px solid white;
+  padding: 5px;
+}
+
+.mainpage-components {
+  border-bottom: 1px solid black;
+  padding: 0.5rem;
+  width: 100%
+}
+
+.hidden-input {
+  display: none;
+}
+
+.file-label {
+  display: inline-block;
+  cursor: pointer;
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.mobile-file-label {
+  display: inline-block;
+  cursor: pointer;
+  color: #00ff0d;
+  text-decoration: underline;
+}
+
+.contact-button {
+  border: 1px solid #FFD700
+}
+
+;
+
+.overlay-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  position: relative;
+  transform: scale(0.8);
+  animation: scaleIn 0.5s ease-out;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 1s ease-out;
+}
+
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.8);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(0.8);
+  }
+}
+
+.overlay-modal.closing {
+  animation: fadeOut 0.5s ease-out forwards;
+}
+
+.modal-content.closing {
+  animation: scaleOut 0.5s ease-out forwards;
+}
+
+.ps__rail-y {
+  opacity: 1 !important;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.ps__thumb-y {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.ps__rail-y:hover,
+.ps__rail-y:focus,
+.ps__rail-y:active {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+
+/* loader modal here */
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 400px;
+  /* Adjust width as needed */
+}
+
+.front {
+  animation: slide-front 2s infinite;
+}
+
+.back {
+  animation: slide-back 2s infinite;
+}
+
+@keyframes slide-front {
+  0% {
+    transform: translateX(0) translateY(0) rotate(0deg);
+  }
+
+  25% {
+    transform: translateX(0) translateY(0) rotate(45deg);
+  }
+
+  50% {
+    transform: translateX(0) translateY(0) rotate(0deg);
+  }
+
+  100% {
+    transform: translateX(0) translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes slide-back {
+  0% {
+    transform: translateX(0) translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateX(0) translateY(0) rotate(0deg);
+  }
+
+  75% {
+    transform: translateX(0) translateY(0) rotate(-45deg);
+  }
+
+  100% {
+    transform: translateX(0) translateY(0) rotate(0deg);
+  }
+}
+
+
+
+
+/* Homepage ends here */
+
+/* @media screen and (min-width: 768px) and (max-width: 820px) {
+  .middle-mobile-nav {
+    top: 8%;
+  }
+}
+
+
+@media screen and (min-width: 820px) and (max-width: 1024px) {
+  .middle-mobile-nav {
+    top: 6%;
+  }
+}
+
+@media screen and (width: 1024px) and (height: 1366px) {
+  .header-upper {
+    top: 7%;
+  }
+
+  .header-bottom {
+    top: 17%;
+  }
+
+}
+@media screen and (width: 1280px) and (height: 800px) {
+  .header-upper {
+    top: 8%;
+  }
+
+  .header-bottom {
+    top: 24%;
+  }
+
+}
+
+
+
+@media screen and (width: 1024px) and (height: 600px) {
+  .header-upper {
+    top: 13%;
+  }
+
+  .header-bottom {
+    top: 34%;
+  }
+
+}
+
+
+@media screen and (min-width: 200px) and (max-width: 290px) {
+  .middle-mobile-nav {
+    top: 11%;
+  }
+}
+@media screen and (min-width: 301px) and (max-width: 389px) {
+  .middle-mobile-nav {
+    top: 11%;
+  }
+}
+
+@media screen and (min-width: 390px) and (max-width: 400px) {
+  .middle-mobile-nav {
+    top: 8%;
+  }
+}
+
+@media screen and (min-width: 401px) and (max-width: 500px) {
+  .middle-mobile-nav {
+    top: 8%;
+  }
+}
+@media screen and (min-width: 540px) and (max-width: 600px) {
+  .middle-mobile-nav {
+    top: 10%;
+  }
+} */

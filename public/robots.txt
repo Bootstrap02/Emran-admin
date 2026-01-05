@@ -1,0 +1,23 @@
+# This robots.txt file allows all crawlers to access your site
+
+User-agent: *
+Allow: /
+
+# Specifically allow Google's AdSense bot
+User-agent: Mediapartners-Google
+Allow: /
+
+# Allow Google's main search bot
+User-agent: Googlebot
+Allow: /
+
+# Allow Googlebot-Image (for image search indexing)
+User-agent: Googlebot-Image
+Allow: /
+
+# Allow Googlebot-Mobile (for mobile indexing)
+User-agent: Googlebot-Mobile
+Allow: /
+
+# Sitemap location
+Sitemap: https://campusify.net/sitemap.xml
