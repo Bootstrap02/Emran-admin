@@ -1,0 +1,519 @@
+// src/pages/ConfirmedPayments.jsx
+import React, { useState, useEffect } from 'react';
+import { FiCheckCircle, FiXCircle, FiRefreshCw } from 'react-icons/fi';
+
+export const ConfirmedPayments = () => {
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch confirmed payments (dummy data for now)
+  useEffect(() => {
+    const fetchConfirmedPayments = async () => {
+      try {
+        // Replace with your real API endpoint when ready
+        // const res = await axios.get('/api/admin/confirmed-payments', {
+        //   headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
+        // });
+        // setPayments(res.data);
+
+        // Dummy data (remove when API is ready)
+        const dummy = [
+          {
+            _id: 'p1',
+            fullname: 'Adebayo Johnson',
+            email: 'adebayo.johnson@gmail.com',
+            phone: '+234 812 345 6789',
+            paymentType: 'Annual Dues',
+            receiptCode: 'DUES-2025-00123',
+            amount: 40000,
+            paidDate: '2025-01-05T11:20:00Z',
+            status: 'Confirmed',
+          },
+          {
+            _id: 'p2',
+            fullname: 'Fatima Ibrahim',
+            email: 'fatima.ibrahim@yahoo.com',
+            phone: '+234 803 456 7890',
+            paymentType: 'Subscription',
+            receiptCode: 'SUB-2025-00456',
+            amount: 60000,
+            paidDate: '2025-01-12T09:45:00Z',
+            status: 'Confirmed',
+          },
+          {
+            _id: 'p3',
+            fullname: 'Chukwuma Okeke',
+            email: 'chukwuma.okeke@outlook.com',
+            phone: '+234 706 789 0123',
+            paymentType: 'Annual Dues',
+            receiptCode: 'DUES-2025-00789',
+            amount: 40000,
+            paidDate: '2025-01-18T16:30:00Z',
+            status: 'Confirmed',
+          },
+          {
+            _id: 'p4',
+            fullname: 'Aisha Mohammed',
+            email: 'aisha.mohammed@gmail.com',
+            phone: '+234 809 876 5432',
+            paymentType: 'Subscription',
+            receiptCode: 'SUB-2025-00987',
+            amount: 60000,
+            paidDate: '2025-01-20T14:10:00Z',
+            status: 'Confirmed',
+          },
+        ];
+
+        setPayments(dummy);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load confirmed payments');
+        setLoading(false);
+        console.error(err);
+      }
+    };
+
+    fetchConfirmedPayments();
+  }, []);
+
+  const handleConfirm = async (paymentId) => {
+    if (!window.confirm('Confirm this payment?')) return;
+
+    try {
+      // Replace with real API (e.g., mark as confirmed)
+      // await axios.put(`/api/admin/payments/${paymentId}/confirm`);
+      alert(`Confirmed payment: ${paymentId}`);
+
+      // Optional: update UI status
+      setPayments(prev =>
+        prev.map(p => p._id === paymentId ? { ...p, status: 'Confirmed' } : p)
+      );
+    } catch (err) {
+      alert('Failed to confirm');
+    }
+  };
+
+  const handleReject = async (paymentId) => {
+    if (!window.confirm('Reject this payment?')) return;
+
+    try {
+      // Replace with real API
+      // await axios.put(`/api/admin/payments/${paymentId}/reject`);
+      alert(`Rejected payment: ${paymentId}`);
+
+      // Optional: remove or mark as rejected
+      setPayments(prev => prev.filter(p => p._id !== paymentId));
+    } catch (err) {
+      alert('Failed to reject');
+    }
+  };
+
+  const handleRefund = async (paymentId) => {
+    if (!window.confirm('Initiate refund for this payment?')) return;
+
+    try {
+      // Replace with real API
+      // await axios.post(`/api/admin/payments/${paymentId}/refund`);
+      alert(`Refund initiated for: ${paymentId}`);
+
+      // Optional: update status
+      setPayments(prev =>
+        prev.map(p => p._id === paymentId ? { ...p, status: 'Refunded' } : p)
+      );
+    } catch (err) {
+      alert('Failed to process refund');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-2xl text-[#001F5B] animate-pulse">Loading confirmed payments...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-2xl text-red-600">{error}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Page Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-[#001F5B] mb-4">
+            Confirmed Payments
+          </h1>
+          <p className="text-xl text-gray-600">
+            View and manage verified dues and subscription payments
+          </p>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gradient-to-r from-[#001F5B] to-[#0A3D6B] text-white">
+                <tr>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Full Name</th>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Email</th>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Phone</th>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Payment Type</th>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Receipt Code</th>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Amount (₦)</th>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Request Time</th>
+                  <th className="px-6 py-5 text-center text-lg font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {payments.length === 0 ? (
+                  <tr>
+                    <td colSpan="8" className="px-6 py-16 text-center text-gray-500 text-xl">
+                      No confirmed payments yet
+                    </td>
+                  </tr>
+                ) : (
+                  payments.map(payment => (
+                    <tr key={payment._id} className="hover:bg-gray-50 transition">
+                      <td className="px-6 py-6 whitespace-nowrap font-medium text-gray-900">
+                        {payment.fullname}
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap text-gray-600">
+                        {payment.email}
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap text-gray-600">
+                        {payment.phone}
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap text-gray-700 font-medium">
+                        {payment.paymentType}
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap text-gray-600 font-mono">
+                        {payment.receiptCode}
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap text-gray-800 font-bold">
+                        {payment.amount.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap text-gray-600">
+                        {new Date(payment.paidDate).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap text-center">
+                        <div className="flex justify-center gap-6">
+                          {/* Confirm Button */}
+                          <button
+                            onClick={() => handleConfirm(payment._id)}
+                            className="text-green-600 hover:text-green-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-green-50"
+                            title="Confirm Payment"
+                          >
+                            <FiCheckCircle className="text-3xl" />
+                          </button>
+
+                          {/* Reject Button */}
+                          <button
+                            onClick={() => handleReject(payment._id)}
+                            className="text-red-600 hover:text-red-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-red-50"
+                            title="Reject / Flag Issue"
+                          >
+                            <FiXCircle className="text-3xl" />
+                          </button>
+
+                          {/* Refund Button */}
+                          {/* <button
+                            onClick={() => handleRefund(payment._id)}
+                            className="text-blue-600 hover:text-blue-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-blue-50"
+                            title="Initiate Refund"
+                          >
+                            <FiRefreshCw className="text-3xl" />
+                          </button> */}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// src/pages/AllPayments.jsx — ALL PROCESSED PAYMENTS (ADMIN VIEW)
+
+
+export const AllPayments = () => {
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch all payments (dummy for now — replace with real API)
+  useEffect(() => {
+    const fetchAllPayments = async () => {
+      try {
+        // When real API is ready, uncomment and adjust:
+        // const res = await axios.get('YOUR_ALL_PAYMENTS_API_ENDPOINT', {
+        //   headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
+        // });
+        // setPayments(res.data);
+
+        // Dummy data (remove when API is live)
+        const dummyPayments = [
+          {
+            _id: 'pay001',
+            fullname: 'Adebayo Johnson',
+            email: 'adebayo.johnson@gmail.com',
+            phone: '+234 812 345 6789',
+            paymentType: 'Annual Dues',
+            receiptCode: 'DUES-2025-00123',
+            amount: 40000,
+            paidDate: '2025-01-05T11:20:00Z',
+            status: 'Confirmed',
+          },
+          {
+            _id: 'pay002',
+            fullname: 'Fatima Ibrahim',
+            email: 'fatima.ibrahim@yahoo.com',
+            phone: '+234 803 456 7890',
+            paymentType: 'Subscription',
+            receiptCode: 'SUB-2025-00456',
+            amount: 60000,
+            paidDate: '2025-01-12T09:45:00Z',
+            status: 'Confirmed',
+          },
+          {
+            _id: 'pay003',
+            fullname: 'Chukwuma Okeke',
+            email: 'chukwuma.okeke@outlook.com',
+            phone: '+234 706 789 0123',
+            paymentType: 'Annual Dues',
+            receiptCode: 'DUES-2025-00789',
+            amount: 40000,
+            paidDate: '2025-01-18T16:30:00Z',
+            status: 'Pending Verification',
+          },
+          {
+            _id: 'pay004',
+            fullname: 'Aisha Mohammed',
+            email: 'aisha.mohammed@gmail.com',
+            phone: '+234 809 876 5432',
+            paymentType: 'Subscription',
+            receiptCode: 'SUB-2025-00987',
+            amount: 60000,
+            paidDate: '2025-01-20T14:10:00Z',
+            status: 'Confirmed',
+          },
+          {
+            _id: 'pay005',
+            fullname: 'Emeka Nwosu',
+            email: 'emeka.nwosu@yahoo.com',
+            phone: '+234 701 234 5678',
+            paymentType: 'Annual Dues',
+            receiptCode: 'DUES-2025-01012',
+            amount: 40000,
+            paidDate: '2025-01-22T08:55:00Z',
+            status: 'Refunded',
+          },
+        ];
+
+        setPayments(dummyPayments);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load payment records');
+        setLoading(false);
+        console.error(err);
+      }
+    };
+
+    fetchAllPayments();
+  }, []);
+
+  // Action handlers (replace with real API calls later)
+  const handleConfirm = async (paymentId) => {
+    if (!window.confirm('Confirm this payment?')) return;
+    try {
+      // await axios.put(`/api/admin/payments/${paymentId}/confirm`);
+      alert(`Payment ${paymentId} confirmed`);
+      setPayments(prev =>
+        prev.map(p => p._id === paymentId ? { ...p, status: 'Confirmed' } : p)
+      );
+    } catch (err) {
+      alert('Failed to confirm payment');
+    }
+  };
+
+  const handleReject = async (paymentId) => {
+    if (!window.confirm('Reject this payment?')) return;
+    try {
+      // await axios.put(`/api/admin/payments/${paymentId}/reject`);
+      alert(`Payment ${paymentId} rejected`);
+      setPayments(prev =>
+        prev.map(p => p._id === paymentId ? { ...p, status: 'Rejected' } : p)
+      );
+    } catch (err) {
+      alert('Failed to reject payment');
+    }
+  };
+
+  const handleRefund = async (paymentId) => {
+    if (!window.confirm('Initiate refund? This cannot be undone.')) return;
+    try {
+      // await axios.post(`/api/admin/payments/${paymentId}/refund`);
+      alert(`Refund initiated for ${paymentId}`);
+      setPayments(prev =>
+        prev.map(p => p._id === paymentId ? { ...p, status: 'Refunded' } : p)
+      );
+    } catch (err) {
+      alert('Failed to process refund');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-2xl text-[#001F5B] animate-pulse">Loading payment records...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-2xl text-red-600">{error}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-[#001F5B] mb-4">
+            All Processed Payments
+          </h1>
+          <p className="text-xl text-gray-600">
+            View and manage all confirmed dues and subscription payments
+          </p>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gradient-to-r from-[#001F5B] to-[#0A3D6B] text-white">
+                <tr>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Name</th>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Email</th>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Phone</th>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Type</th>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Receipt Code</th>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Amount (₦)</th>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Paid On</th>
+                  <th className="px-6 py-5 text-center text-lg font-semibold">Status</th>
+                  <th className="px-6 py-5 text-center text-lg font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {payments.length === 0 ? (
+                  <tr>
+                    <td colSpan="9" className="px-6 py-16 text-center text-gray-500 text-xl">
+                      No payment records found
+                    </td>
+                  </tr>
+                ) : (
+                  payments.map(payment => (
+                    <tr key={payment._id} className="hover:bg-gray-50 transition">
+                      <td className="px-6 py-6 whitespace-nowrap font-medium text-gray-900">
+                        {payment.fullname}
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap text-gray-600">
+                        {payment.email}
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap text-gray-600">
+                        {payment.phone}
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap">
+                        <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+                          payment.paymentType === 'Subscription' 
+                            ? 'bg-purple-100 text-purple-800' 
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {payment.paymentType}
+                        </span>
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap font-mono text-gray-700">
+                        {payment.receiptCode}
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap font-bold text-gray-900">
+                        ₦{payment.amount.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap text-gray-600">
+                        {new Date(payment.paidDate).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap text-center">
+                        <span className={`inline-flex px-4 py-2 rounded-full text-sm font-bold ${
+                          payment.status === 'Confirmed' ? 'bg-green-100 text-green-800' :
+                          payment.status === 'Refunded' ? 'bg-orange-100 text-orange-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {payment.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap text-center">
+                        <div className="flex justify-center gap-6">
+                          <button
+                            onClick={() => handleConfirm(payment._id)}
+                            className="text-green-600 hover:text-green-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-green-50"
+                            title="Confirm / Verify"
+                          >
+                            <FiCheckCircle className="text-3xl" />
+                          </button>
+
+                          <button
+                            onClick={() => handleReject(payment._id)}
+                            className="text-red-600 hover:text-red-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-red-50"
+                            title="Reject / Flag Issue"
+                          >
+                            <FiXCircle className="text-3xl" />
+                          </button>
+
+                          {/* <button
+                            onClick={() => handleRefund(payment._id)}
+                            className="text-blue-600 hover:text-blue-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-blue-50"
+                            title="Process Refund"
+                          >
+                            <FiRefreshCw className="text-3xl" />
+                          </button> */}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
