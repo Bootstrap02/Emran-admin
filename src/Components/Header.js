@@ -16,7 +16,6 @@ const AdminHeader = () => {
   const navigate = useNavigate();
 
   // Dummy unread count (replace with real API)
-  const unreadCount = 7;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -26,16 +25,10 @@ const AdminHeader = () => {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate('/admin/login');
+    navigate('/');
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/admin/users/search?name=${searchQuery}`);
-      setSearchQuery('');
-    }
-  };
+  
 
   // Mobile dropdown toggle
   const toggleMobileDropdown = (title) => {
@@ -43,23 +36,11 @@ const AdminHeader = () => {
   };
 
   const navSections = [
-    // {
-    //   title: 'Users',
-    //   icon: <FiUsers className="text-xl" />,
-    //   items: [
-    //     { label: 'Create New User', path: '/admin/users/create', icon: <FiPlusCircle /> },
-    //     { label: 'View All Users', path: '/admin/users/all', icon: <FiList /> },
-    //     { label: 'Search by Name', path: '/admin/users/search', icon: <FiSearch /> },
-    //     { label: 'Dues Status', path: '/admin/users/dues', icon: <FiDollarSign /> },
-    //     { label: 'Pending Approvals', path: '/admin/users/pending', icon: <FiCheckCircle /> },
-    //   ]
-    // },
     {
       title: 'Approvals',
       icon: <FiCheckCircle className="text-xl" />,
       items: [
         { label: 'Pending Signups', path: '/pending', icon: <FiList /> },
-        { label: 'Rejected Requests', path: '/rejected', icon: <FiTrash2 /> },
       ]
     },
    {
@@ -67,7 +48,6 @@ const AdminHeader = () => {
       icon: <FiAlertCircle className="text-xl" />,
       items: [
         { label: 'Confirm Payment', path: '/confirmpayment', icon: <FiPlusCircle /> },
-        { label: 'View All payments', path: '/viewpayment', icon: <FiList /> },
       ]
     },
     {
@@ -89,14 +69,6 @@ const AdminHeader = () => {
         { label: 'View Newsevents', path: '/allnewsevents', icon: <FiList /> },
       ]
     },
-    // {
-    //   title: 'Benefits',
-    //   icon: <FiHeart className="text-xl" />,
-    //   items: [
-    //     { label: 'Pension Overview', path: '/admin/pension-overview', icon: <FiDollarSign /> },
-    //     { label: 'Health Coverage', path: '/admin/health-overview', icon: <FiHeart /> },
-    //   ]
-    // },
   ];
 
   return (
@@ -148,28 +120,6 @@ const AdminHeader = () => {
 
           {/* Right Side */}
           <div className="flex items-center gap-6">
-            {/* Quick Search */}
-            {/* <form onSubmit={handleSearch} className="relative hidden md:block">
-              <input
-                type="text"
-                placeholder="Search users..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 pl-10 pr-4 py-3 bg-white/20 border border-white/30 rounded-full text-white placeholder-gray-300 focus:outline-none focus:border-[#E30613] focus:ring-2 focus:ring-[#E30613]/30 transition"
-              />
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70" />
-            </form> */}
-
-            {/* Notifications Bell */}
-            <button className="relative">
-              <FiBell className={`text-2xl ${scrolled ? 'text-[#001F5B]' : 'text-white'} hover:text-[#E30613]`} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#E30613] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
             {/* Admin Profile */}
             <div className="flex items-center gap-4">
               <button 

@@ -1,5 +1,5 @@
 // src/pages/Login.jsx — SIMPLE ADMIN SIGN IN (REAL API)
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FiEye, FiEyeOff, FiLogIn } from 'react-icons/fi';
@@ -17,6 +17,29 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError(''); // Clear error on input change
   };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const notifRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenotifications');
+        localStorage.setItem('notifications', JSON.stringify(notifRes.data));
+
+        const eventsRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenewsevents');
+        localStorage.setItem('newevents', JSON.stringify(eventsRes.data));
+
+        const alertRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatealert');
+        localStorage.setItem('alerts', JSON.stringify(alertRes.data));
+        const adminRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/getadmin');
+        localStorage.setItem('admin', JSON.stringify(adminRes.data));
+        const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/getusers');
+        localStorage.setItem('users', JSON.stringify(usersRes.data));
+        const messageRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatemessages');
+        localStorage.setItem('messages', JSON.stringify(messageRes.data));
+      } catch (err) {
+        console.error('Failed to fetch data:', err);
+        // Use toast instead of alert in production
+      }
+    };fetchData(); // Runs once
+  }, []); // Empty array = once on moun
 
   const handleSubmit = async (e) => {
     e.preventDefault();

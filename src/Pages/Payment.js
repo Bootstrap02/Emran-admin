@@ -6,64 +6,13 @@ export const ConfirmedPayments = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const admin = JSON.parse(localStorage.getItem('admin'));
 
   // Fetch confirmed payments (dummy data for now)
   useEffect(() => {
     const fetchConfirmedPayments = async () => {
       try {
-        // Replace with your real API endpoint when ready
-        // const res = await axios.get('/api/admin/confirmed-payments', {
-        //   headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
-        // });
-        // setPayments(res.data);
-
-        // Dummy data (remove when API is ready)
-        const dummy = [
-          {
-            _id: 'p1',
-            fullname: 'Adebayo Johnson',
-            email: 'adebayo.johnson@gmail.com',
-            phone: '+234 812 345 6789',
-            paymentType: 'Annual Dues',
-            receiptCode: 'DUES-2025-00123',
-            amount: 40000,
-            paidDate: '2025-01-05T11:20:00Z',
-            status: 'Confirmed',
-          },
-          {
-            _id: 'p2',
-            fullname: 'Fatima Ibrahim',
-            email: 'fatima.ibrahim@yahoo.com',
-            phone: '+234 803 456 7890',
-            paymentType: 'Subscription',
-            receiptCode: 'SUB-2025-00456',
-            amount: 60000,
-            paidDate: '2025-01-12T09:45:00Z',
-            status: 'Confirmed',
-          },
-          {
-            _id: 'p3',
-            fullname: 'Chukwuma Okeke',
-            email: 'chukwuma.okeke@outlook.com',
-            phone: '+234 706 789 0123',
-            paymentType: 'Annual Dues',
-            receiptCode: 'DUES-2025-00789',
-            amount: 40000,
-            paidDate: '2025-01-18T16:30:00Z',
-            status: 'Confirmed',
-          },
-          {
-            _id: 'p4',
-            fullname: 'Aisha Mohammed',
-            email: 'aisha.mohammed@gmail.com',
-            phone: '+234 809 876 5432',
-            paymentType: 'Subscription',
-            receiptCode: 'SUB-2025-00987',
-            amount: 60000,
-            paidDate: '2025-01-20T14:10:00Z',
-            status: 'Confirmed',
-          },
-        ];
+        const dummy = admin.paymentApprovals
 
         setPayments(dummy);
         setLoading(false);
@@ -81,13 +30,12 @@ export const ConfirmedPayments = () => {
     if (!window.confirm('Confirm this payment?')) return;
 
     try {
-      // Replace with real API (e.g., mark as confirmed)
-      // await axios.put(`/api/admin/payments/${paymentId}/confirm`);
-      alert(`Confirmed payment: ${paymentId}`);
+      await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/approvepayment', paymentId.userId );
+      alert(`Confirmed payment: ${paymentId.fullname}`);
 
       // Optional: update UI status
       setPayments(prev =>
-        prev.map(p => p._id === paymentId ? { ...p, status: 'Confirmed' } : p)
+        prev.map(p => p._id === paymentId.userId ? { ...p, status: 'Confirmed' } : p)
       );
     } catch (err) {
       alert('Failed to confirm');
@@ -98,33 +46,16 @@ export const ConfirmedPayments = () => {
     if (!window.confirm('Reject this payment?')) return;
 
     try {
-      // Replace with real API
-      // await axios.put(`/api/admin/payments/${paymentId}/reject`);
-      alert(`Rejected payment: ${paymentId}`);
+      await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/disapprovepayment', paymentId.userId);
+      alert(`Rejected payment: ${paymentId.fullname}`);
 
       // Optional: remove or mark as rejected
-      setPayments(prev => prev.filter(p => p._id !== paymentId));
+      setPayments(prev => prev.filter(p => p._id !== paymentId.userId));
     } catch (err) {
       alert('Failed to reject');
     }
   };
 
-  const handleRefund = async (paymentId) => {
-    if (!window.confirm('Initiate refund for this payment?')) return;
-
-    try {
-      // Replace with real API
-      // await axios.post(`/api/admin/payments/${paymentId}/refund`);
-      alert(`Refund initiated for: ${paymentId}`);
-
-      // Optional: update status
-      setPayments(prev =>
-        prev.map(p => p._id === paymentId ? { ...p, status: 'Refunded' } : p)
-      );
-    } catch (err) {
-      alert('Failed to process refund');
-    }
-  };
 
   if (loading) {
     return (
@@ -212,7 +143,7 @@ export const ConfirmedPayments = () => {
                         <div className="flex justify-center gap-6">
                           {/* Confirm Button */}
                           <button
-                            onClick={() => handleConfirm(payment._id)}
+                            onClick={() => handleConfirm(payment)}
                             className="text-green-600 hover:text-green-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-green-50"
                             title="Confirm Payment"
                           >
@@ -221,7 +152,7 @@ export const ConfirmedPayments = () => {
 
                           {/* Reject Button */}
                           <button
-                            onClick={() => handleReject(payment._id)}
+                            onClick={() => handleReject(payment)}
                             className="text-red-600 hover:text-red-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-red-50"
                             title="Reject / Flag Issue"
                           >

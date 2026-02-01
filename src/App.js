@@ -2,7 +2,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Pages/Login';
-import {PendingSignups, RejectedMembers} from './Pages/Pending';
+import { PendingSignups, } from './Pages/Pending';
 import {ConfirmedPayments, AllPayments} from './Pages/Payment';
 import NewsEvents from './Pages/NewsEvents';
 import Notifications from './Pages/Notifications';
@@ -21,7 +21,6 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/firstpage" element={<Firstpage />} />
         <Route path="/pending" element={<PendingSignups />} />
-        <Route path="/rejected" element={<RejectedMembers />} />
         <Route path="/confirmpayment" element={<ConfirmedPayments />} />
         <Route path="/viewpayment" element={<AllPayments />} />
         <Route path="/alerts" element={<CreateAlert />} />

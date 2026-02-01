@@ -1,116 +1,111 @@
 // src/pages/Messages.jsx
 import React, { useState, useEffect } from 'react';
-import { FiX, FiSend, FiUser } from 'react-icons/fi';
+import axios from 'axios';
+import { FiX, FiSend, FiUser, FiLoader } from 'react-icons/fi';
 
 const Messages = () => {
   const [conversations, setConversations] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const messages = JSON.parse(localStorage.getItem('messages'));
 
-  // Load conversations (from localStorage or dummy data)
+
+  // Fetch conversations
   useEffect(() => {
-    // Replace with real API fetch later
-    // const fetchConversations = async () => {
-    //   const res = await axios.get('YOUR_CONVERSATIONS_API');
-    //   setConversations(res.data);
-    // };
-    // fetchConversations();
+    const fetchConversations = async () => {
+      try {
 
-    // Dummy conversations (remove when API is ready)
-    const dummy = [
-      {
-        id: 1,
-        sender: 'Admin',
-        lastMessage: 'Your dues payment has been confirmed. Welcome!',
-        lastMessageTime: '2h ago',
-        avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-        messages: [
-          { id: 1, sender: 'Admin', text: 'Hello! Your dues payment has been confirmed.', time: '1h ago' },
-          { id: 2, sender: 'You', text: 'Thank you so much!', time: '1h ago' },
-          { id: 3, sender: 'Admin', text: 'You’re welcome. Let us know if you need help.', time: '50min ago' },
-        ],
-      },
-      {
-        id: 2,
-        sender: 'Support Team',
-        lastMessage: 'We received your health coverage request.',
-        lastMessageTime: 'Yesterday',
-        avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-        messages: [
-          { id: 1, sender: 'Support Team', text: 'Good day! We received your request.', time: 'Yesterday' },
-          { id: 2, sender: 'You', text: 'Thank you, when will it be processed?', time: 'Yesterday' },
-        ],
-      },
-      {
-        id: 3,
-        sender: 'Admin',
-        lastMessage: 'Reminder: AGM is next month.',
-        lastMessageTime: '3 days ago',
-        avatar: 'https://randomuser.me/api/portraits/men/65.jpg',
-        messages: [
-          { id: 1, sender: 'Admin', text: 'Just a reminder about the AGM.', time: '3 days ago' },
-        ],
-      },
-    ];
+        setConversations(messages.data || []);
+      } catch (err) {
+        setError('Failed to load conversations');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    setConversations(dummy);
+    fetchConversations();
   }, []);
 
-  // Open modal with selected chat
   const openChatModal = (chat) => {
     setSelectedChat(chat);
     setModalOpen(true);
   };
 
-  // Close modal
   const closeModal = () => {
     setModalOpen(false);
     setSelectedChat(null);
     setReplyText('');
   };
 
-  // Send reply (dummy for now — replace with API)
-  const sendReply = () => {
-    if (!replyText.trim()) return;
+  const sendReply = async () => {
+    if (!replyText.trim() || !selectedChat) return;
 
-    // Simulate sending
-    const newMessage = {
-      id: Date.now(),
-      sender: 'You',
-      text: replyText,
-      time: 'Just now',
-    };
+    try {
+      const newMessage = {
+        id: Date.now(),
+        sender: 'You',
+        text: replyText.trim(),
+        time: 'Just now',
+      };
 
-    setSelectedChat(prev => ({
-      ...prev,
-      messages: [...prev.messages, newMessage],
-      lastMessage: replyText,
-      lastMessageTime: 'Just now',
-    }));
+      // Simulate UI update
+      setSelectedChat(prev => ({
+        ...prev,
+        messages: [...prev.messages, newMessage],
+        lastMessage: replyText.trim(),
+        lastMessageTime: 'Just now',
+      }));
 
-    setReplyText('');
+      // Real API call
+      await axios.post('https://campusbuy-backend-nkmx.onrender.com/mobilcreatemessages', {
+        receiverId: selectedChat.id,
+        content: replyText.trim(),
+      });
+
+      setReplyText('');
+    } catch (err) {
+      alert('Failed to send message');
+      console.error(err);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <FiLoader className="text-6xl text-[#E30613] animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-xl text-red-600">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-extrabold text-[#001F5B] mb-4">
             Messages & Conversations
           </h1>
           <p className="text-xl text-gray-600">
-            View and reply to messages from members and support team
+            View and reply to messages from super admin
           </p>
         </div>
 
-        {/* Conversations List */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
           <div className="divide-y divide-gray-200">
             {conversations.length === 0 ? (
               <div className="p-16 text-center text-gray-500 text-xl">
-                No conversations yet
+                No messages yet
               </div>
             ) : (
               conversations.map(chat => (
@@ -119,12 +114,11 @@ const Messages = () => {
                   onClick={() => openChatModal(chat)}
                   className="flex items-center gap-6 p-6 hover:bg-gray-50 transition cursor-pointer"
                 >
-                  {/* Avatar */}
                   <div className="flex-shrink-0">
-                    {chat.avatar ? (
+                    {chat.sender.avatar ? (
                       <img
-                        src={chat.avatar}
-                        alt={chat.sender}
+                        src={chat.sender.avatar}
+                        alt={chat.sender.fullname}
                         className="w-16 h-16 rounded-full object-cover border-2 border-[#E30613]"
                       />
                     ) : (
@@ -134,15 +128,13 @@ const Messages = () => {
                     )}
                   </div>
 
-                  {/* Message Preview */}
                   <div className="flex-1 min-w-0">
                     <p className="text-lg font-semibold text-gray-900 truncate">
-                      {chat.sender}
+                      {chat.sender.fullname || chat.sender}
                     </p>
                     <p className="text-gray-600 truncate">{chat.lastMessage}</p>
                   </div>
 
-                  {/* Time */}
                   <div className="text-sm text-gray-500 whitespace-nowrap">
                     {chat.lastMessageTime}
                   </div>
@@ -155,29 +147,31 @@ const Messages = () => {
 
       {/* Chat Modal */}
       {modalOpen && selectedChat && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4"
           onClick={closeModal}
         >
-          <div 
+          <div
             className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col"
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-[#001F5B] to-[#0A3D6B] text-white px-8 py-6 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                {selectedChat.avatar ? (
+                {selectedChat.sender.avatar ? (
                   <img
-                    src={selectedChat.avatar}
-                    alt={selectedChat.sender}
+                    src={selectedChat.sender.avatar}
+                    alt={selectedChat.sender.fullname}
                     className="w-12 h-12 rounded-full object-cover border-2 border-white"
                   />
                 ) : (
                   <FiUser className="text-4xl text-white" />
                 )}
                 <div>
-                  <h2 className="text-2xl font-bold">{selectedChat.sender}</h2>
-                  <p className="text-sm opacity-90">Online • Last active 2 min ago</p>
+                  <h2 className="text-2xl font-bold">
+                    {selectedChat.sender.fullname || selectedChat.sender}
+                  </h2>
+                  <p className="text-sm opacity-90">Super Admin</p>
                 </div>
               </div>
               <button onClick={closeModal} className="text-white hover:text-[#E30613] text-3xl">
@@ -190,9 +184,7 @@ const Messages = () => {
               {selectedChat.messages.map(msg => (
                 <div
                   key={msg.id}
-                  className={`mb-6 flex ${
-                    msg.sender === 'You' ? 'justify-end' : 'justify-start'
-                  }`}
+                  className={`mb-6 flex ${msg.sender === 'You' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
                     className={`max-w-[75%] rounded-2xl px-6 py-4 shadow ${
