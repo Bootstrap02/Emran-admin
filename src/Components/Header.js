@@ -14,6 +14,7 @@ const AdminHeader = () => {
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+  const admin = JSON.parse(localStorage.getItem('admin'));
 
   // Dummy unread count (replace with real API)
 
@@ -61,11 +62,11 @@ const AdminHeader = () => {
       title: 'Information MGt',
       icon: <FiBell className="text-xl" />,
       items: [
-        { label: 'Create Notification', path: '/notifications', icon: <FiPlusCircle /> },
+        { label: 'Create Notification', path: `/notifications/${admin._id}`, icon: <FiPlusCircle /> },
         { label: 'View Notifications', path: '/allnotifications', icon: <FiList /> },
-        { label: 'Create Alert', path: '/alerts', icon: <FiPlusCircle /> },
+        { label: 'Create Alert', path: `/alerts/${admin._id}`, icon: <FiPlusCircle /> },
         { label: 'View Alerts', path: '/allalerts', icon: <FiList /> },
-        { label: 'Create Newsevent', path: '/newsevents', icon: <FiPlusCircle /> },
+        { label: 'Create Newsevent', path: `/newsevents/${admin._id}`, icon: <FiPlusCircle /> },
         { label: 'View Newsevents', path: '/allnewsevents', icon: <FiList /> },
       ]
     },
@@ -122,13 +123,13 @@ const AdminHeader = () => {
           <div className="flex items-center gap-6">
             {/* Admin Profile */}
             <div className="flex items-center gap-4">
-              <button 
+              {/* <button 
                 onClick={() => navigate('/admin/profile')}
                 className="flex items-center gap-2 bg-[#E30613] text-white px-6 py-3 rounded-full font-bold hover:bg-[#c20511] transition shadow-lg"
               >
                 <FiUser /> Admin
-              </button>
-              <button onClick={handleLogout} className="text-gray-700 hover:text-[#E30613]">
+              </button> */}
+              <button onClick={handleLogout} className=" text-orange-700 hover:text-[#E30613]">
                 <FiLogOut className="text-2xl" />
               </button>
             </div>

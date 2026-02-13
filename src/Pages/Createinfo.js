@@ -1,40 +1,81 @@
-// src/pages/admin/CreateNotification.jsx
 import React, { useState } from 'react';
+import axios from "axios";
+import { useParams } from "react-router-dom";
+import { FiLoader, FiXCircle, FiCheckCircle } from 'react-icons/fi';
+
 
 export const CreateNotification = () => {
   const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
+  const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
-
-  
+  const [feedback, setFeedback] = useState(null); // for nice top message
+const { id } = useParams();   // ← destructuring gives you the actual string ID
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setFeedback(null);
+
+    if (!title.trim() || !content.trim()) {
+      setFeedback({ type: 'error', text: 'Title and content are required' });
+      setLoading(false);
+      return;
+    }
 
     try {
-      // Replace with your real API
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('body', body);
-      await axios.post('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenotifications', formData);
+      const response = await axios.post(
+        `https://campusbuy-backend-nkmx.onrender.com/mobilcreatenotifications/${id}`,
+        { title, content }, // ← send JSON
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      alert('Notification created successfully!');
+      setFeedback({
+        type: 'success',
+        text: response.data.message || 'Notification created successfully!',
+      });
+
       setTitle('');
-      setBody('');
+      setContent('');
     } catch (err) {
-      alert('Failed to create notification');
-      console.error(err);
+      setFeedback({
+        type: 'error',
+        text: err.response?.data?.message || 'Failed to create notification',
+      });
+      console.error('Create error:', err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-gray-50 py-12 px-4 relative">
       <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-10">
         <h1 className="text-4xl font-bold text-[#001F5B] mb-8 text-center">
           Create New Notification
         </h1>
+
+        {/* Top Feedback Modal */}
+        {feedback && (
+          <div
+            className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 max-w-lg w-full px-4 animate-fade-in-down ${
+              feedback.type === 'success' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'
+            } p-5 rounded-xl shadow-lg border ${
+              feedback.type === 'success' ? 'border-green-300' : 'border-red-300'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {feedback.type === 'success' ? (
+                <FiCheckCircle className="text-2xl" />
+              ) : (
+                <FiXCircle className="text-2xl" />
+              )}
+              <p className="font-medium">{feedback.text}</p>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Title */}
@@ -52,29 +93,37 @@ export const CreateNotification = () => {
             />
           </div>
 
-          {/* Body */}
+          {/* Content */}
           <div>
             <label className="block text-lg font-medium text-gray-700 mb-2">
-              Message Body
+              Message Content
             </label>
             <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
               placeholder="Write the notification message here..."
               rows="6"
               className="w-full px-6 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-[#E30613] focus:ring-2 focus:ring-[#E30613]/30 transition"
               required
             />
           </div>
+
           {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-5 rounded-xl text-white font-bold text-xl transition ${
+            className={`w-full py-5 rounded-xl text-white font-bold text-xl transition flex items-center justify-center gap-3 ${
               loading ? 'bg-gray-500 cursor-not-allowed' : 'bg-[#E30613] hover:bg-[#c20511]'
             }`}
           >
-            {loading ? 'Creating...' : 'Create Notification'}
+            {loading ? (
+              <>
+                <FiLoader className="animate-spin text-2xl" />
+                Creating...
+              </>
+            ) : (
+              'Create Notification'
+            )}
           </button>
         </form>
       </div>
@@ -88,6 +137,7 @@ export const CreateNewsevent = () => {
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const {id} = useParams()
 
   const handleImageChange = (e) => {
     if (e.target.files[0]) {
@@ -107,13 +157,14 @@ export const CreateNewsevent = () => {
 
     try {
       // Step 1: Create news/event (no image)
-      const createFormData = new FormData();
-      createFormData.append('title', title);
-      createFormData.append('body', body);
-
-      const createResponse = await axios.post(
-        'https://campusbuy-backend-nkmx.onrender.com/mobilcreatenewsevents',
-        createFormData
+     const  createResponse = await axios.post(
+        `https://campusbuy-backend-nkmx.onrender.com/mobilcreatenewsevents/${id}`,
+        { title, body }, // ← send JSON
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
       );
 
       const newsEventId = createResponse.data.newsEvent._id; // Get the ID
@@ -121,14 +172,13 @@ export const CreateNewsevent = () => {
       // Step 2: Upload image if selected
       if (image) {
         const imageFormData = new FormData();
-        imageFormData.append('image', image);
+        imageFormData.append('images', image);
 
         await axios.put(
-          `https://campusbuy-backend-nkmx.onrender.com/mobilcreatenewsevents/image${newsEventId}`,
+          `https://campusbuy-backend-nkmx.onrender.com/mobilcreatenewsevents/image/${newsEventId}`,
           imageFormData
         );
       }
-
       setMessage({ type: 'success', text: 'News/Event created successfully!' });
       setTitle('');
       setBody('');
@@ -240,25 +290,26 @@ export const CreateNewsevent = () => {
 };
 export const CreateAlert = () => {
   const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
+  const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
-
+  const {id} = useParams();
  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Replace with your real API
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('body', body);
-      await axios.post('https://campusbuy-backend-nkmx.onrender.com/mobilcreatealerts', formData);
-
+        await axios.post(`https://campusbuy-backend-nkmx.onrender.com/mobilcreatealert/${id}`,
+        { title, content }, // ← send JSON
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
       alert('Alert created successfully!');
       setTitle('');
-      setBody('');
-      setImage(null);
+      setContent('');
     } catch (err) {
       alert('Failed to create alert');
       console.error(err);
@@ -290,15 +341,15 @@ export const CreateAlert = () => {
             />
           </div>
 
-          {/* Body */}
+          {/* Content */}
           <div>
             <label className="block text-lg font-medium text-gray-700 mb-2">
-              Message Body
+              Message Content
             </label>
             <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="Write the nlert message here..."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write the alert message here..."
               rows="6"
               className="w-full px-6 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-[#E30613] focus:ring-2 focus:ring-[#E30613]/30 transition"
               required

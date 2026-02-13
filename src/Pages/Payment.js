@@ -1,6 +1,8 @@
 // src/pages/ConfirmedPayments.jsx
 import React, { useState, useEffect } from 'react';
 import { FiCheckCircle, FiXCircle, FiRefreshCw } from 'react-icons/fi';
+import axios from "axios";
+
 
 export const ConfirmedPayments = () => {
   const [payments, setPayments] = useState([]);
@@ -13,7 +15,6 @@ export const ConfirmedPayments = () => {
     const fetchConfirmedPayments = async () => {
       try {
         const dummy = admin.paymentApprovals
-
         setPayments(dummy);
         setLoading(false);
       } catch (err) {
@@ -26,36 +27,80 @@ export const ConfirmedPayments = () => {
     fetchConfirmedPayments();
   }, []);
 
-  const handleConfirm = async (paymentId) => {
-    if (!window.confirm('Confirm this payment?')) return;
+  // const handleConfirm = async (paymentId) => {
+  //   if (!window.confirm('Confirm this payment?')) return;
 
-    try {
-      await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/approvepayment', paymentId.userId );
-      alert(`Confirmed payment: ${paymentId.fullname}`);
+  //   try {
+  //     console.log(paymentId)
+  //     await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/approvepayment', { userId: paymentId } );
+  //     alert(`Confirmed payment: ${paymentId.fullname}`);
 
-      // Optional: update UI status
-      setPayments(prev =>
-        prev.map(p => p._id === paymentId.userId ? { ...p, status: 'Confirmed' } : p)
-      );
-    } catch (err) {
-      alert('Failed to confirm');
-    }
-  };
+  //     // Optional: update UI status
+  //     setPayments(prev =>
+  //       prev.map(p => p._id === paymentId ? { ...p, status: 'Confirmed' } : p)
+  //     );
+  //   } catch (err) {
+  //     alert('Failed to confirm');
+  //   }
+  // };
 
-  const handleReject = async (paymentId) => {
-    if (!window.confirm('Reject this payment?')) return;
+  // const handleReject = async (paymentId) => {
+  //   if (!window.confirm('Reject this payment?')) return;
 
-    try {
-      await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/disapprovepayment', paymentId.userId);
-      alert(`Rejected payment: ${paymentId.fullname}`);
+  //   try {
+  //     console.log(paymentId)
+  //     await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/disapprovepayment', { userId: paymentId });
+  //     alert(`Rejected payment: ${paymentId.fullname}`);
 
-      // Optional: remove or mark as rejected
-      setPayments(prev => prev.filter(p => p._id !== paymentId.userId));
-    } catch (err) {
-      alert('Failed to reject');
-    }
-  };
+  //     // Optional: remove or mark as rejected
+  //     setPayments(prev => prev.filter(p => p._id !== paymentId));
+  //   } catch (err) {
+  //     alert('Failed to reject');
+  //   }
+  // };
+const handleConfirm = async (paymentId) => {
+  if (!window.confirm('Confirm this payment?')) return;
 
+  try {
+    console.log('Confirming payment for userId:', paymentId);
+
+    const response = await axios.put(
+      'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/approvepayment',
+      { userId: paymentId }  // ← FIXED
+    );
+
+    alert(`Confirmed payment for user: ${paymentId}`);
+
+    // Optional: update UI (mark as confirmed)
+    setPayments(prev =>
+      prev.map(p => p.userId === paymentId ? { ...p, status: 'Confirmed' } : p)
+    );
+  } catch (err) {
+    console.error('Confirm error:', err.response?.data || err.message);
+    alert(err.response?.data?.message || 'Failed to confirm payment');
+  }
+};
+
+const handleReject = async (paymentId) => {
+  if (!window.confirm('Reject this payment?')) return;
+
+  try {
+    console.log('Rejecting payment for userId:', paymentId);
+
+    const response = await axios.put(
+      'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/disapprovepayment',
+      { userId: paymentId }  // ← FIXED
+    );
+
+    alert(`Rejected payment for user: ${paymentId}`);
+
+    // Remove from list
+    setPayments(prev => prev.filter(p => p.userId !== paymentId));
+  } catch (err) {
+    console.error('Reject error:', err.response?.data || err.message);
+    alert(err.response?.data?.message || 'Failed to reject payment');
+  }
+};
 
   if (loading) {
     return (
@@ -95,9 +140,7 @@ export const ConfirmedPayments = () => {
                   <th className="px-6 py-5 text-left text-lg font-semibold">Full Name</th>
                   <th className="px-6 py-5 text-left text-lg font-semibold">Email</th>
                   <th className="px-6 py-5 text-left text-lg font-semibold">Phone</th>
-                  <th className="px-6 py-5 text-left text-lg font-semibold">Payment Type</th>
-                  <th className="px-6 py-5 text-left text-lg font-semibold">Receipt Code</th>
-                  <th className="px-6 py-5 text-left text-lg font-semibold">Amount (₦)</th>
+                  <th className="px-6 py-5 text-left text-lg font-semibold">Payment Token</th>
                   <th className="px-6 py-5 text-left text-lg font-semibold">Request Time</th>
                   <th className="px-6 py-5 text-center text-lg font-semibold">Actions</th>
                 </tr>
@@ -122,16 +165,10 @@ export const ConfirmedPayments = () => {
                         {payment.phone}
                       </td>
                       <td className="px-6 py-6 whitespace-nowrap text-gray-700 font-medium">
-                        {payment.paymentType}
-                      </td>
-                      <td className="px-6 py-6 whitespace-nowrap text-gray-600 font-mono">
-                        {payment.receiptCode}
-                      </td>
-                      <td className="px-6 py-6 whitespace-nowrap text-gray-800 font-bold">
-                        {payment.amount.toLocaleString()}
-                      </td>
+                        {payment.paymentToken}
+                      </td> 
                       <td className="px-6 py-6 whitespace-nowrap text-gray-600">
-                        {new Date(payment.paidDate).toLocaleDateString('en-GB', {
+                        {new Date(payment.requestedAt).toLocaleDateString('en-GB', {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric',
@@ -143,7 +180,7 @@ export const ConfirmedPayments = () => {
                         <div className="flex justify-center gap-6">
                           {/* Confirm Button */}
                           <button
-                            onClick={() => handleConfirm(payment)}
+                            onClick={() => handleConfirm(payment.userId)}
                             className="text-green-600 hover:text-green-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-green-50"
                             title="Confirm Payment"
                           >
@@ -152,7 +189,7 @@ export const ConfirmedPayments = () => {
 
                           {/* Reject Button */}
                           <button
-                            onClick={() => handleReject(payment)}
+                            onClick={() => handleReject(payment.userId)}
                             className="text-red-600 hover:text-red-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-red-50"
                             title="Reject / Flag Issue"
                           >
@@ -180,9 +217,6 @@ export const ConfirmedPayments = () => {
     </div>
   );
 };
-
-
-// src/pages/AllPayments.jsx — ALL PROCESSED PAYMENTS (ADMIN VIEW)
 
 
 export const AllPayments = () => {

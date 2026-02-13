@@ -1,6 +1,8 @@
 // src/pages/PendingSignups.jsx
 import React, { useState, useEffect } from 'react';
 import { FiCheckCircle, FiXCircle } from 'react-icons/fi';
+import axios from "axios";
+
 
 export const PendingSignups = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
@@ -31,11 +33,11 @@ export const PendingSignups = () => {
     if (!window.confirm('Approve this signup?')) return;
 
     try {
-      await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/approve', userId.userId);
+      await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/approve', userId);
       alert(`Approved user: ${userId.fullname}`); // Temporary feedback
 
       // Refresh list (in real app, remove approved user or refetch)
-      setPendingUsers(prev => prev.filter(u => u._id !== userId.userId));
+      setPendingUsers(prev => prev.filter(u => u._id !== userId));
     } catch (err) {
       alert('Failed to approve');
       console.error(err);
@@ -46,7 +48,7 @@ export const PendingSignups = () => {
     if (!window.confirm('Disapprove this signup?')) return;
 
     try {
-      await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/disapprove', userId.userId);
+      await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/disapprove', userId);
       alert(`Disapproved user: ${userId.fullname}`);
 
       // Refresh list

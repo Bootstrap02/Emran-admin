@@ -6,12 +6,14 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx'; // ← Add this import
+import axios from "axios";
+
 
 
 export const AllUsers = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(null);
   const [error, setError] = useState(null);
 
   // Message modal
@@ -581,7 +583,7 @@ const handleSearch = async (e) => {
   try {
     // FIXED: Correct endpoint + proper query param format
     const res = await axios.get(
-  `https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/finduser?type=${searchType}&query=${encodeURIComponent(searchQuery.trim())}`
+  `https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/findusername?type=${searchType}&query=${encodeURIComponent(searchQuery.trim())}`
 );
 
     // Handle both possible response shapes
@@ -917,7 +919,7 @@ const handleSearch = async (e) => {
 };
 
 
-const DuesStatus = () => {
+export const DuesStatus = () => {
   const navigate = useNavigate();
   const [duesStatus, setDuesStatus] = useState('paid'); // 'paid' or 'unpaid'
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -942,7 +944,7 @@ const DuesStatus = () => {
       try {
         const paidParam = duesStatus === 'paid' ? 'true' : 'false';
         const res = await axios.get(
-          `https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/finduserdues?paid=${paidParam}`
+          `https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/finduserdues?paid=${paidParam}`
         );
 
         setFilteredUsers(res.data.users || res.data || []);
@@ -1107,6 +1109,37 @@ const downloadExcel = (status) => {
           </div>
 
           {/* Download Buttons */}
+          {duesStatus ==='paid' ?
+           <div className="flex flex-col sm:flex-row gap-6 justify-center mt-10">
+  <button
+    onClick={() => downloadPDF('paid')}
+    className="flex items-center gap-3 px-8 py-4 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-bold"
+  >
+    <FiDownload /> Download Paid (PDF)
+  </button>
+  <button
+    onClick={() => downloadExcel('paid')}
+    className="flex items-center gap-3 px-8 py-4 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition font-bold"
+  >
+    <FiDownload /> Download Paid (Excel)
+  </button>
+</div>
+:
+ <div className="flex flex-col sm:flex-row gap-6 justify-center mt-10">
+ <button
+    onClick={() => downloadPDF('unpaid')}
+    className="flex items-center gap-3 px-8 py-4 bg-red-600 text-white rounded-xl hover:bg-red-700 transition font-bold"
+  >
+    <FiDownload /> Download Unpaid (PDF)
+  </button>
+  <button
+    onClick={() => downloadExcel('unpaid')}
+    className="flex items-center gap-3 px-8 py-4 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition font-bold"
+  >
+    <FiDownload /> Download Unpaid (Excel)
+  </button>
+</div>
+          }
           <div className="flex flex-col sm:flex-row gap-6 justify-center mt-10">
   <button
     onClick={() => downloadPDF('paid')}
@@ -1348,4 +1381,3 @@ const downloadExcel = (status) => {
   );
 };
 
-export default DuesStatus;

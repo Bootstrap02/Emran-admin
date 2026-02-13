@@ -23,15 +23,15 @@ function App() {
         <Route path="/pending" element={<PendingSignups />} />
         <Route path="/confirmpayment" element={<ConfirmedPayments />} />
         <Route path="/viewpayment" element={<AllPayments />} />
-        <Route path="/alerts" element={<CreateAlert />} />
+        <Route path="/alerts/:id" element={<CreateAlert />} />
         <Route path="/users" element={<AllUsers />} />
         <Route path="/finduser" element={<FindUser />} />
         <Route path="/sortdues" element={<DuesStatus />} />
         <Route path="/useredit/:id" element={<UserEdit />} />
         <Route path="/allalerts" element={<AllAlerts />} />
-        <Route path="/notifications" element={<CreateNotification />} />
+        <Route path="/notifications/:id" element={<CreateNotification />} />
         <Route path="/allnotifications" element={<AllNotifications />} />
-        <Route path="/newsevents" element={<CreateNewsevent />} />
+        <Route path="/newsevents/:id" element={<CreateNewsevent />} />
         <Route path="/allnewsevents" element={<AllNewsevents />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/news-events" element={<PrivateRoute><NewsEvents /></PrivateRoute>} />

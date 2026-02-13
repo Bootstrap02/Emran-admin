@@ -21,17 +21,16 @@ const Login = () => {
     const fetchData = async () => {
       try {
         const notifRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenotifications');
-        localStorage.setItem('notifications', JSON.stringify(notifRes.data));
+        localStorage.setItem('notifications', JSON.stringify(notifRes.data.notifications));
 
         const eventsRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenewsevents');
-        localStorage.setItem('newevents', JSON.stringify(eventsRes.data));
-
+        localStorage.setItem('newsevents', JSON.stringify(eventsRes.data.newsEvent));
         const alertRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatealert');
-        localStorage.setItem('alerts', JSON.stringify(alertRes.data));
-        const adminRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/getadmin');
-        localStorage.setItem('admin', JSON.stringify(adminRes.data));
+        localStorage.setItem('alerts', JSON.stringify(alertRes.data.alerts));
+        const adminRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/admin');
+        localStorage.setItem('admin', JSON.stringify(adminRes.data.admin));
         const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/getusers');
-        localStorage.setItem('users', JSON.stringify(usersRes.data));
+        localStorage.setItem('users', JSON.stringify(usersRes.data.users));
         const messageRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatemessages');
         localStorage.setItem('messages', JSON.stringify(messageRes.data));
       } catch (err) {
