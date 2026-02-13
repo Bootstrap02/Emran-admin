@@ -27,7 +27,7 @@ const Support = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm('Delete message?')) {
-      await axios.delete('/api/admin/support/${id}');
+      await axios.delete(`/api/admin/support/${id}`);
       fetchMessages();
     }
   };

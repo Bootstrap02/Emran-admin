@@ -27,7 +27,7 @@ export const PendingSignups = () => {
     };
 
     fetchPendingUsers();
-  }, []);
+  }, [admin.pendingApprovals]);
 
   const handleApprove = async (userId) => {
     if (!window.confirm('Approve this signup?')) return;
