@@ -6,8 +6,6 @@ import axios from "axios";
 
 export const AllNotifications = () => {
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(null);
-  const [error, setError] = useState(null);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -16,7 +14,7 @@ export const AllNotifications = () => {
   useEffect(() => {
     // Fetch real data later
     setNotifications(allNotifications)
-  }, []);
+  }, [allNotifications]);
 
   // Delete notification
   const handleDelete = async (id) => {
@@ -72,21 +70,7 @@ export const AllNotifications = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-2xl text-[#001F5B] animate-pulse">Loading notifications...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-2xl text-red-600">{error}</div>
-      </div>
-    );
-  }
+  
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -191,7 +175,6 @@ export const AllNotifications = () => {
 export const AllNewsevents = () => {
   const [newsevents, setNewsevents] = useState([]);
   const [loading, setLoading] = useState(null);
-  const [error, setError] = useState(null);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -201,7 +184,7 @@ export const AllNewsevents = () => {
   useEffect(() => {
     // Fetch real data later
     setNewsevents(allNewsevents)
-  }, []);
+  }, [allNewsevents]);
 
 
   // Delete news/event
@@ -276,24 +259,10 @@ export const AllNewsevents = () => {
     }
   };
 
-  const handleImageChange = (e) => {
-    if (e.target.files[0]) {
-      setEditImage(e.target.files[0]);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-2xl text-[#001F5B] animate-pulse">Loading news/events...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-2xl text-red-600">{error}</div>
       </div>
     );
   }
@@ -435,8 +404,6 @@ export const AllNewsevents = () => {
 
 export const AllAlerts = () => {
   const [alerts, setAlerts] = useState([]);
-  const [loading, setLoading] = useState(null);
-  const [error, setError] = useState(null);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -446,7 +413,7 @@ const allAlerts= JSON.parse(localStorage.getItem("alerts"))
   useEffect(() => {
     // Fetch real data later
     setAlerts(allAlerts)
-  }, []);
+  }, [allAlerts]);
 
   // Delete alert
   const handleDelete = async (id) => {
@@ -502,21 +469,6 @@ const allAlerts= JSON.parse(localStorage.getItem("alerts"))
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-2xl text-[#001F5B] animate-pulse">Loading alerts...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-2xl text-red-600">{error}</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

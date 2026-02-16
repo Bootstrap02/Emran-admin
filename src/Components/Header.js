@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
-  FiMenu, FiX, FiBell, FiUser, FiLogOut, FiSearch, FiUsers, 
-  FiAlertCircle, FiMessageSquare, FiCalendar, FiHeart, FiCheckCircle, 
-  FiEdit, FiTrash2, FiPlusCircle, FiList, FiDollarSign
+  FiMenu, FiX, FiBell, FiLogOut,
+  FiAlertCircle, FiMessageSquare, FiCheckCircle, 
+   FiPlusCircle, FiList,
 } from 'react-icons/fi';
 import exxonLogo from '../assets/exxonmobil-logo-white.jpg';
 
@@ -12,7 +12,6 @@ const AdminHeader = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
   const admin = JSON.parse(localStorage.getItem('admin'));
 

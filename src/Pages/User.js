@@ -13,9 +13,7 @@ import axios from "axios";
 export const AllUsers = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(null);
-  const [error, setError] = useState(null);
-
+ 
   // Message modal
   const [messageModalOpen, setMessageModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -30,7 +28,7 @@ export const AllUsers = () => {
    useEffect(() => {
      // Fetch real data later
      setUsers(allUsers)
-   }, []);
+   }, [allUsers]);
  
 
   // Delete user
@@ -70,8 +68,6 @@ export const AllUsers = () => {
     setDetailModalOpen(true);
   };
 
-  if (loading) return <div className="text-center py-20 text-2xl text-[#001F5B] animate-pulse">Loading users...</div>;
-  if (error) return <div className="text-center py-20 text-2xl text-red-600">{error}</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

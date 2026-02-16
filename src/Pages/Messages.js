@@ -28,7 +28,7 @@ const Messages = () => {
     };
 
     fetchConversations();
-  }, []);
+  }, [messages.data]);
 
   const openChatModal = (chat) => {
     setSelectedChat(chat);

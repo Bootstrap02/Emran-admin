@@ -1,6 +1,6 @@
 // src/pages/ConfirmedPayments.jsx
 import React, { useState, useEffect } from 'react';
-import { FiCheckCircle, FiXCircle, FiRefreshCw } from 'react-icons/fi';
+import { FiCheckCircle, FiXCircle, } from 'react-icons/fi';
 import axios from "axios";
 
 
@@ -25,7 +25,7 @@ export const ConfirmedPayments = () => {
     };
 
     fetchConfirmedPayments();
-  }, []);
+  }, [admin.paymentApprovals]);
 
   // const handleConfirm = async (paymentId) => {
   //   if (!window.confirm('Confirm this payment?')) return;
@@ -68,7 +68,7 @@ const handleConfirm = async (paymentId) => {
       'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/approvepayment',
       { userId: paymentId }  // ← FIXED
     );
-
+    console.log(response.data.message)
     alert(`Confirmed payment for user: ${paymentId}`);
 
     // Optional: update UI (mark as confirmed)
@@ -91,6 +91,7 @@ const handleReject = async (paymentId) => {
       'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/disapprovepayment',
       { userId: paymentId }  // ← FIXED
     );
+    console.log(response.data.message)
 
     alert(`Rejected payment for user: ${paymentId}`);
 
@@ -329,19 +330,6 @@ export const AllPayments = () => {
       );
     } catch (err) {
       alert('Failed to reject payment');
-    }
-  };
-
-  const handleRefund = async (paymentId) => {
-    if (!window.confirm('Initiate refund? This cannot be undone.')) return;
-    try {
-      // await axios.post(`/api/admin/payments/${paymentId}/refund`);
-      alert(`Refund initiated for ${paymentId}`);
-      setPayments(prev =>
-        prev.map(p => p._id === paymentId ? { ...p, status: 'Refunded' } : p)
-      );
-    } catch (err) {
-      alert('Failed to process refund');
     }
   };
 

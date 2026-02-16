@@ -1,10 +1,9 @@
 // pages/AdminHome.jsx — COMPLEX ADMIN HOMEPAGE
 import React from 'react';
 import Header from '../Components/Header';
-import axios from "axios";
 import Footer from '../Components/Footer';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { FiMenu, FiX, FiBell, FiUser, FiLogOut, FiSearch, FiUsers, FiDollarSign, FiAlertCircle, FiMessageSquare, FiCalendar, FiHeart } from 'react-icons/fi';
+import { NavLink } from 'react-router-dom';
+import {  FiUsers, } from 'react-icons/fi';
 
 
 const AdminHome = () => {
