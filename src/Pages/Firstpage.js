@@ -1,5 +1,6 @@
 // pages/AdminHome.jsx — COMPLEX ADMIN HOMEPAGE
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../Components/Header';
 import Footer from '../Components/Footer';
 import { NavLink } from 'react-router-dom';
@@ -7,6 +8,17 @@ import {  FiUsers, } from 'react-icons/fi';
 
 
 const AdminHome = () => {
+const navigate = useNavigate();
+
+  useEffect(() => {
+    const admin= JSON.parse(localStorage.getItem("adminData"))
+    const adminToken= JSON.parse(localStorage.getItem("adminToken"))
+    if (!admin && !adminToken) {
+      navigate('/');
+      return;
+    }
+  }, [navigate]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />

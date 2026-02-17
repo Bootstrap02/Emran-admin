@@ -24,12 +24,19 @@ export const AllUsers = () => {
   const [selectedDetailUser, setSelectedDetailUser] = useState(null);
 
   // Fetch all alerts from real API
-   const allUsers= JSON.parse(localStorage.getItem("users"))
+   const allUsers= JSON.parse(localStorage.getItem("users"));
    useEffect(() => {
      // Fetch real data later
      setUsers(allUsers)
    }, [allUsers]);
- 
+  useEffect(() => {
+     const admin= JSON.parse(localStorage.getItem("adminData"))
+     const adminToken= JSON.parse(localStorage.getItem("adminToken"))
+     if (!admin && !adminToken) {
+       navigate('/');
+       return;
+     }
+   }, [navigate]);
 
   // Delete user
   const handleDelete = async (userId) => {
@@ -330,6 +337,14 @@ export const AllUsers = () => {
 export const UserEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+   useEffect(() => {
+      const admin= JSON.parse(localStorage.getItem("adminData"))
+      const adminToken= JSON.parse(localStorage.getItem("adminToken"))
+      if (!admin && !adminToken) {
+        navigate('/');
+        return;
+      }
+    }, [navigate]);
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -359,7 +374,7 @@ export const UserEdit = () => {
           duesPaid: fetchedUser.duesPaid || false,
           subscriptionPaid: fetchedUser.subscriptionPaid || false,
           role: fetchedUser.role || 'prospect',
-          address: fetchedUser.address || '',
+          position: fetchedUser.position || '',
         });
         setLoading(false);
       } catch (err) {
@@ -415,9 +430,9 @@ export const UserEdit = () => {
 
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-t-8 border-[#E30613]">
           <div className="bg-gradient-to-r from-[#001F5B] to-[#0A3D6B] text-white px-10 py-12 text-center">
-            {user.profilePic ? (
+            {user.image[0] ? (
               <img
-                src={user.profilePic}
+                src={user.image[0]}
                 alt={user.fullname}
                 className="w-32 h-32 rounded-full mx-auto mb-6 object-cover border-4 border-white shadow-lg"
               />
@@ -511,11 +526,11 @@ export const UserEdit = () => {
                 </p>
               </div>
               <div>
-                <label className="block text-lg font-medium text-gray-700 mb-2">Address</label>
+                <label className="block text-lg font-medium text-gray-700 mb-2">Position</label>
                 <input
                   type="text"
-                  name="address"
-                  value={formData.address}
+                  name="position"
+                  value={formData.position}
                   onChange={handleChange}
                   className="w-full px-6 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-[#E30613] focus:ring-2 focus:ring-[#E30613]/30 transition"
                 />
@@ -562,7 +577,14 @@ export const FindUser = () => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedDetailUser, setSelectedDetailUser] = useState(null);
 
-  
+   useEffect(() => {
+      const admin= JSON.parse(localStorage.getItem("adminData"))
+      const adminToken= JSON.parse(localStorage.getItem("adminToken"))
+      if (!admin && !adminToken) {
+        navigate('/');
+        return;
+      }
+    }, [navigate]);
 // Handle search - FIXED with correct backend route
 const handleSearch = async (e) => {
   e.preventDefault();
@@ -931,6 +953,14 @@ export const DuesStatus = () => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedDetailUser, setSelectedDetailUser] = useState(null);
 
+   useEffect(() => {
+      const admin= JSON.parse(localStorage.getItem("adminData"))
+      const adminToken= JSON.parse(localStorage.getItem("adminToken"))
+      if (!admin && !adminToken) {
+        navigate('/');
+        return;
+      }
+    }, [navigate]);
   // Fetch users by dues status
   useEffect(() => {
     const fetchUsersByDues = async () => {

@@ -1,5 +1,6 @@
 // src/pages/ConfirmedPayments.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiCheckCircle, FiXCircle, } from 'react-icons/fi';
 import axios from "axios";
 
@@ -9,6 +10,16 @@ export const ConfirmedPayments = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const admin = JSON.parse(localStorage.getItem('admin'));
+  const navigate = useNavigate();
+
+   useEffect(() => {
+    const admin= JSON.parse(localStorage.getItem("adminData"))
+    const adminToken= JSON.parse(localStorage.getItem("adminToken"))
+    if (!admin && !adminToken) {
+      navigate('/');
+      return;
+    }
+  }, [navigate]);
 
   // Fetch confirmed payments (dummy data for now)
   useEffect(() => {
@@ -27,37 +38,7 @@ export const ConfirmedPayments = () => {
     fetchConfirmedPayments();
   }, [admin.paymentApprovals]);
 
-  // const handleConfirm = async (paymentId) => {
-  //   if (!window.confirm('Confirm this payment?')) return;
 
-  //   try {
-  //     console.log(paymentId)
-  //     await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/approvepayment', { userId: paymentId } );
-  //     alert(`Confirmed payment: ${paymentId.fullname}`);
-
-  //     // Optional: update UI status
-  //     setPayments(prev =>
-  //       prev.map(p => p._id === paymentId ? { ...p, status: 'Confirmed' } : p)
-  //     );
-  //   } catch (err) {
-  //     alert('Failed to confirm');
-  //   }
-  // };
-
-  // const handleReject = async (paymentId) => {
-  //   if (!window.confirm('Reject this payment?')) return;
-
-  //   try {
-  //     console.log(paymentId)
-  //     await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/disapprovepayment', { userId: paymentId });
-  //     alert(`Rejected payment: ${paymentId.fullname}`);
-
-  //     // Optional: remove or mark as rejected
-  //     setPayments(prev => prev.filter(p => p._id !== paymentId));
-  //   } catch (err) {
-  //     alert('Failed to reject');
-  //   }
-  // };
 const handleConfirm = async (paymentId) => {
   if (!window.confirm('Confirm this payment?')) return;
 
@@ -223,78 +204,24 @@ const handleReject = async (paymentId) => {
 export const AllPayments = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); 
+  const navigate = useNavigate();
 
+
+   useEffect(() => {
+    const admin= JSON.parse(localStorage.getItem("adminData"))
+    const adminToken= JSON.parse(localStorage.getItem("adminToken"))
+    if (!admin && !adminToken) {
+      navigate('/');
+      return;
+    }
+  }, [navigate]);
   // Fetch all payments (dummy for now — replace with real API)
   useEffect(() => {
     const fetchAllPayments = async () => {
       try {
-        // When real API is ready, uncomment and adjust:
-        // const res = await axios.get('YOUR_ALL_PAYMENTS_API_ENDPOINT', {
-        //   headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
-        // });
-        // setPayments(res.data);
-
-        // Dummy data (remove when API is live)
-        const dummyPayments = [
-          {
-            _id: 'pay001',
-            fullname: 'Adebayo Johnson',
-            email: 'adebayo.johnson@gmail.com',
-            phone: '+234 812 345 6789',
-            paymentType: 'Annual Dues',
-            receiptCode: 'DUES-2025-00123',
-            amount: 40000,
-            paidDate: '2025-01-05T11:20:00Z',
-            status: 'Confirmed',
-          },
-          {
-            _id: 'pay002',
-            fullname: 'Fatima Ibrahim',
-            email: 'fatima.ibrahim@yahoo.com',
-            phone: '+234 803 456 7890',
-            paymentType: 'Subscription',
-            receiptCode: 'SUB-2025-00456',
-            amount: 60000,
-            paidDate: '2025-01-12T09:45:00Z',
-            status: 'Confirmed',
-          },
-          {
-            _id: 'pay003',
-            fullname: 'Chukwuma Okeke',
-            email: 'chukwuma.okeke@outlook.com',
-            phone: '+234 706 789 0123',
-            paymentType: 'Annual Dues',
-            receiptCode: 'DUES-2025-00789',
-            amount: 40000,
-            paidDate: '2025-01-18T16:30:00Z',
-            status: 'Pending Verification',
-          },
-          {
-            _id: 'pay004',
-            fullname: 'Aisha Mohammed',
-            email: 'aisha.mohammed@gmail.com',
-            phone: '+234 809 876 5432',
-            paymentType: 'Subscription',
-            receiptCode: 'SUB-2025-00987',
-            amount: 60000,
-            paidDate: '2025-01-20T14:10:00Z',
-            status: 'Confirmed',
-          },
-          {
-            _id: 'pay005',
-            fullname: 'Emeka Nwosu',
-            email: 'emeka.nwosu@yahoo.com',
-            phone: '+234 701 234 5678',
-            paymentType: 'Annual Dues',
-            receiptCode: 'DUES-2025-01012',
-            amount: 40000,
-            paidDate: '2025-01-22T08:55:00Z',
-            status: 'Refunded',
-          },
-        ];
-
-        setPayments(dummyPayments);
+        const pendingPayments= JSON.parse(localStorage.getItem("adminData"))
+       await setPayments(pendingPayments.paymentApprovals);
         setLoading(false);
       } catch (err) {
         setError('Failed to load payment records');

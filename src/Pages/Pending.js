@@ -1,5 +1,6 @@
 // src/pages/PendingSignups.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import axios from "axios";
 
@@ -9,7 +10,7 @@ export const PendingSignups = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const admin = JSON.parse(localStorage.getItem('admin'));
-
+  const navigate = useNavigate();
 
   // Fetch pending signups (dummy data for now)
   useEffect(() => {
@@ -28,6 +29,14 @@ export const PendingSignups = () => {
 
     fetchPendingUsers();
   }, [admin.pendingApprovals]);
+   useEffect(() => {
+      const admin= JSON.parse(localStorage.getItem("adminData"))
+      const adminToken= JSON.parse(localStorage.getItem("adminToken"))
+      if (!admin && !adminToken) {
+        navigate('/');
+        return;
+      }
+    }, [navigate]);
 
   const handleApprove = async (userId) => {
     if (!window.confirm('Approve this signup?')) return;
