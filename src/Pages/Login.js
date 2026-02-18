@@ -52,7 +52,7 @@ const Login = () => {
       );
 
       // Store token & admin data
-      localStorage.setItem('adminToken', res.data.token);
+      localStorage.setItem('adminToken', JSON.stringify(res.data.token));
       localStorage.setItem('adminData', JSON.stringify(res.data.admin));
 
       // Redirect to admin dashboard
