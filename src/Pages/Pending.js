@@ -130,7 +130,7 @@ export const PendingSignups = () => {
                         {user.phone}
                       </td>
                       <td className="px-6 py-6 whitespace-nowrap text-gray-600">
-                        {new Date(user.createdAt).toLocaleDateString('en-GB', {
+                        {new Date(user.requestedAt).toLocaleDateString('en-GB', {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric',
