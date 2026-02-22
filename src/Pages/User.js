@@ -39,19 +39,30 @@ export const AllUsers = () => {
    }, [navigate]);
 
   // Delete user
-  const handleDelete = async (userId) => {
-    if (!window.confirm('Delete this user permanently? This cannot be undone.')) return;
+ const handleDelete = async (id) => {
+  if (!window.confirm('Delete this user permanently? This cannot be undone.')) return;
 
-    try {
-      await axios.delete(`https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/deleteuser/${userId}`);
-      await setUsers(prev => prev.filter(u => u._id !== userId));
-      await localStorage.setItem('users', JSON.stringify(users));
-      alert('User deleted successfully');
-    } catch (err) {
-      alert('Failed to delete user: ' + (err.response?.data?.message || err.message));
-      console.error(err);
-    }
-  };
+  try {
+    // Fix 1: Add trailing slash to URL
+    const url = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/deleteuser/';
+
+    // Fix 2: Send body correctly in config.data
+     await axios.delete(url, { data: { id } }); // Note: { data: { id } }
+
+    // Update state and localStorage
+    setUsers(prev => {
+      const newUsers = prev.filter(u => u._id !== id);
+      localStorage.setItem('users', JSON.stringify(newUsers)); // Update LS after filter
+      return newUsers;
+    });
+
+    alert('User deleted successfully');
+  } catch (err) {
+    // Better error handling: Log full response for debugging
+    console.error('Delete error:', err.response ? err.response.data : err.message);
+    alert('Failed to delete user: ' + (err.response?.data?.message || err.message));
+  }
+};
 
   // Open message modal
   const openMessageModal = (user) => {
@@ -356,7 +367,7 @@ export const UserEdit = () => {
     duesPaid: false,
     subscriptionPaid: false,
     role: '',
-    address: '',
+    position: '',
   });
 
   // Fetch single user
@@ -616,18 +627,30 @@ const handleSearch = async (e) => {
   }
 };
   // Delete user
-  const handleDelete = async (userId) => {
-    if (!window.confirm('Delete this user permanently? This cannot be undone.')) return;
+ const handleDelete = async (id) => {
+  if (!window.confirm('Delete this user permanently? This cannot be undone.')) return;
 
-    try {
-      await axios.delete('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/deleteuser', userId);
-      setResults(prev => prev.filter(u => u._id !== userId));
-      alert('User deleted successfully');
-    } catch (err) {
-      alert('Failed to delete user: ' + (err.response?.data?.message || err.message));
-      console.error(err);
-    }
-  };
+  try {
+    // Fix 1: Add trailing slash to URL
+    const url = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/deleteuser/';
+
+    // Fix 2: Send body correctly in config.data
+     await axios.delete(url, { data: { id } }); // Note: { data: { id } }
+
+    // Update state and localStorage
+    setResults(prev => {
+      const newUsers = prev.filter(u => u._id !== id);
+      localStorage.setItem('users', JSON.stringify(newUsers)); // Update LS after filter
+      return newUsers;
+    });
+
+    alert('User deleted successfully');
+  } catch (err) {
+    // Better error handling: Log full response for debugging
+    console.error('Delete error:', err.response ? err.response.data : err.message);
+    alert('Failed to delete user: ' + (err.response?.data?.message || err.message));
+  }
+};
 
   // Message modal
   const openMessageModal = (user) => {
@@ -664,7 +687,7 @@ const handleSearch = async (e) => {
         </div>
 
         {/* Search Form */}
-        <form onSubmit={handleSearch} className="bg-white rounded-2xl shadow-xl p-8 mb-12">
+        <form onSubmit={handleSearch} className=" max-lg:hidden bg-white rounded-2xl shadow-xl p-8 mb-12">
           <div className="flex flex-col md:flex-row gap-6 mb-8 justify-center">
             <label className="flex items-center gap-3 cursor-pointer">
               <input
@@ -710,7 +733,7 @@ const handleSearch = async (e) => {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={
                 searchType === 'name' ? 'Enter full name...' :
-                searchType === 'email' ? 'Enter email address...' :
+                searchType === 'email' ? 'Enter email position...' :
                 'Enter phone number...'
               }
               className="flex-1 px-6 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-[#E30613] focus:ring-2 focus:ring-[#E30613]/30 transition"
@@ -720,6 +743,67 @@ const handleSearch = async (e) => {
               type="submit"
               disabled={loading}
               className="px-10 py-4 bg-[#E30613] text-white rounded-xl hover:bg-[#c20511] transition font-bold flex items-center gap-3"
+            >
+              <FiSearch /> Search
+            </button>
+          </div>
+        </form>
+       <form onSubmit={handleSearch} className="hidden max-lg:block bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 mb-12">
+          <div className="flex flex-wrap gap-4 sm:gap-6 mb-6 justify-center">
+            <label className="flex items-center gap-2 sm:gap-3 cursor-pointer">
+              <input
+                type="radio"
+                name="searchType"
+                value="name"
+                checked={searchType === 'name'}
+                onChange={(e) => setSearchType(e.target.value)}
+                className="w-4 h-4 sm:w-5 sm:h-5 text-[#E30613] border-gray-300 rounded focus:ring-[#E30613]"
+              />
+              <span className="text-base sm:text-lg font-medium text-gray-700">By Name</span>
+            </label>
+
+            <label className="flex items-center gap-2 sm:gap-3 cursor-pointer">
+              <input
+                type="radio"
+                name="searchType"
+                value="email"
+                checked={searchType === 'email'}
+                onChange={(e) => setSearchType(e.target.value)}
+                className="w-4 h-4 sm:w-5 sm:h-5 text-[#E30613] border-gray-300 rounded focus:ring-[#E30613]"
+              />
+              <span className="text-base sm:text-lg font-medium text-gray-700">By Email</span>
+            </label>
+
+            <label className="flex items-center gap-2 sm:gap-3 cursor-pointer">
+              <input
+                type="radio"
+                name="searchType"
+                value="phone"
+                checked={searchType === 'phone'}
+                onChange={(e) => setSearchType(e.target.value)}
+                className="w-4 h-4 sm:w-5 sm:h-5 text-[#E30613] border-gray-300 rounded focus:ring-[#E30613]"
+              />
+              <span className="text-base sm:text-lg font-medium text-gray-700">By Phone</span>
+            </label>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={
+                searchType === 'name' ? 'Enter full name...' :
+                searchType === 'email' ? 'Enter email...' :
+                'Enter phone number...'
+              }
+              className="flex-1 px-4 py-3 sm:px-6 sm:py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-[#E30613] focus:ring-2 focus:ring-[#E30613]/30 transition text-sm sm:text-base"
+              required
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-3 sm:px-10 sm:py-4 bg-[#E30613] text-white rounded-xl hover:bg-[#c20511] transition font-bold flex items-center gap-2 sm:gap-3 text-sm sm:text-base"
             >
               <FiSearch /> Search
             </button>
@@ -986,18 +1070,30 @@ export const DuesStatus = () => {
   }, [duesStatus]);
 
   // Delete user
-  const handleDelete = async (userId) => {
-    if (!window.confirm('Delete this user permanently? This cannot be undone.')) return;
+ const handleDelete = async (id) => {
+  if (!window.confirm('Delete this user permanently? This cannot be undone.')) return;
 
-    try {
-      await axios.delete(`https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/deleteuser/${userId}`);
-      setFilteredUsers(prev => prev.filter(u => u._id !== userId));
-      alert('User deleted successfully');
-    } catch (err) {
-      alert('Failed to delete user: ' + (err.response?.data?.message || err.message));
-      console.error(err);
-    }
-  };
+  try {
+    // Fix 1: Add trailing slash to URL
+    const url = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/deleteuser/';
+
+    // Fix 2: Send body correctly in config.data
+     await axios.delete(url, { data: { id } }); // Note: { data: { id } }
+
+    // Update state and localStorage
+    setFilteredUsers(prev => {
+      const newUsers = prev.filter(u => u._id !== id);
+      localStorage.setItem('users', JSON.stringify(newUsers)); // Update LS after filter
+      return newUsers;
+    });
+
+    alert('User deleted successfully');
+  } catch (err) {
+    // Better error handling: Log full response for debugging
+    console.error('Delete error:', err.response ? err.response.data : err.message);
+    alert('Failed to delete user: ' + (err.response?.data?.message || err.message));
+  }
+};
 
   // Message modal
   const openMessageModal = (user) => {
@@ -1166,33 +1262,6 @@ const downloadExcel = (status) => {
   </button>
 </div>
           }
-          <div className="flex flex-col sm:flex-row gap-6 justify-center mt-10">
-  <button
-    onClick={() => downloadPDF('paid')}
-    className="flex items-center gap-3 px-8 py-4 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-bold"
-  >
-    <FiDownload /> Download Paid (PDF)
-  </button>
-  <button
-    onClick={() => downloadExcel('paid')}
-    className="flex items-center gap-3 px-8 py-4 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition font-bold"
-  >
-    <FiDownload /> Download Paid (Excel)
-  </button>
-
-  <button
-    onClick={() => downloadPDF('unpaid')}
-    className="flex items-center gap-3 px-8 py-4 bg-red-600 text-white rounded-xl hover:bg-red-700 transition font-bold"
-  >
-    <FiDownload /> Download Unpaid (PDF)
-  </button>
-  <button
-    onClick={() => downloadExcel('unpaid')}
-    className="flex items-center gap-3 px-8 py-4 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition font-bold"
-  >
-    <FiDownload /> Download Unpaid (Excel)
-  </button>
-</div>
         </div>
 
         {/* Results Table */}

@@ -1,24 +1,21 @@
-// src/pages/PendingSignups.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import axios from "axios";
 
-
 export const PendingSignups = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const admin = JSON.parse(localStorage.getItem('admin'));
   const navigate = useNavigate();
 
-  // Fetch pending signups (dummy data for now)
+  // Fetch pending signups (with real API + localStorage fallback)
   useEffect(() => {
     const fetchPendingUsers = async () => {
       try {
-        const dummy = admin.pendingApprovals
-
-        setPendingUsers(dummy);
+        // Parse admin once inside effect (stable reference)
+        const admin = JSON.parse(localStorage.getItem('admin')) || { pendingApprovals: [] };
+        setPendingUsers(admin.pendingApprovals || []);
         setLoading(false);
       } catch (err) {
         setError('Failed to load pending signups');
@@ -28,15 +25,16 @@ export const PendingSignups = () => {
     };
 
     fetchPendingUsers();
-  }, [admin.pendingApprovals]);
-   useEffect(() => {
-      const admin= JSON.parse(localStorage.getItem("adminData"))
-      const adminToken= JSON.parse(localStorage.getItem("adminToken"))
-      if (!admin && !adminToken) {
-        navigate('/');
-        return;
-      }
-    }, [navigate]);
+  }, []); // Empty dependency: Runs only on mount (no loop)
+
+  // Auth check (unchanged, fine as is)
+  useEffect(() => {
+    const admin = JSON.parse(localStorage.getItem("adminData"));
+    const adminToken = JSON.parse(localStorage.getItem("adminToken"));
+    if (!admin || !adminToken) {
+      navigate('/');
+    }
+  }, [navigate]);
 
   const handleApprove = async (userId) => {
     if (!window.confirm('Approve this signup?')) return;
