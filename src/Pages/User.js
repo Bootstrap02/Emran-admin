@@ -673,6 +673,20 @@ const handleSearch = async (e) => {
     setDetailModalOpen(true);
   };
 
+  // New function: Resend Payment Email via POST to backend
+const resendPaymentEmail = async (user) => {
+  try {
+    const response = await axios.post(
+      'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/resendpaymentemail',
+      { id: user._id }
+    );
+    alert(response.data.message || 'Email resent successfully!');
+  } catch (err) {
+    console.error('Resend error:', err.response?.data || err.message);
+    alert(err.response?.data?.message || 'Failed to resend email');
+  }
+};
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -996,6 +1010,12 @@ const handleSearch = async (e) => {
               </div>
 
               <div className="mt-10 flex justify-end gap-6">
+                <button
+                  onClick={() => resendPaymentEmail(selectedDetailUser)}
+                  className="px-4 py-2 bg-[#E30613] text-white rounded-xl hover:bg-[#c20511] transition"
+                >
+                  Copy Payment Email
+                </button>
                 <button
                   onClick={() => navigate(`/useredit/${selectedDetailUser._id}`)}
                   className="px-8 py-4 bg-[#E30613] text-white rounded-xl hover:bg-[#c20511] transition"
