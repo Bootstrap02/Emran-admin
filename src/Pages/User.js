@@ -1009,7 +1009,7 @@ const resendPaymentEmail = async (user) => {
                 </div>
               </div>
 
-              <div className="mt-10 flex justify-end gap-6">
+              <div className="max-lg:hidden mt-10 flex justify-end gap-6">
                 <button
                   onClick={() => resendPaymentEmail(selectedDetailUser)}
                   className="px-4 py-2 bg-[#E30613] text-white rounded-xl hover:bg-[#c20511] transition"
@@ -1032,6 +1032,40 @@ const resendPaymentEmail = async (user) => {
                   Send Message
                 </button>
               </div>
+              <div className="hidden max-lg:flex flex-col sm:flex-row mt-8 
+                justify-end gap-3 sm:gap-4 w-full">
+
+  <button
+    onClick={() => resendPaymentEmail(selectedDetailUser)}
+    className="w-full sm:w-auto px-4 py-2 text-sm sm:text-base
+               bg-[#E30613] text-white rounded-lg 
+               hover:bg-[#c20511] transition"
+  >
+    Send Payment Email
+  </button>
+
+  <button
+    onClick={() => navigate(`/useredit/${selectedDetailUser._id}`)}
+    className="w-full sm:w-auto px-4 py-2 text-sm sm:text-base
+               bg-[#E30613] text-white rounded-lg 
+               hover:bg-[#c20511] transition"
+  >
+    Edit Profile
+  </button>
+
+  <button
+    onClick={() => {
+      setDetailModalOpen(false);
+      openMessageModal(selectedDetailUser);
+    }}
+    className="w-full sm:w-auto px-4 py-2 text-sm sm:text-base
+               bg-blue-600 text-white rounded-lg 
+               hover:bg-blue-700 transition"
+  >
+    Send Message
+  </button>
+
+</div>
             </div>
           </div>
         )}
