@@ -1014,7 +1014,7 @@ const resendPaymentEmail = async (user) => {
                   onClick={() => resendPaymentEmail(selectedDetailUser)}
                   className="px-4 py-2 bg-[#E30613] text-white rounded-xl hover:bg-[#c20511] transition"
                 >
-                  Copy Payment Email
+                  Send Payment Email
                 </button>
                 <button
                   onClick={() => navigate(`/useredit/${selectedDetailUser._id}`)}

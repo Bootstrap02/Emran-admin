@@ -18,11 +18,11 @@ const Login = () => {
     setError(''); // Clear error on input change
   };
   useEffect(() => {
+    const SUPER_ADMIN_ID = '6996c5148745bad128aaf963';
     const fetchData = async () => {
       try {
         const notifRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenotifications');
         localStorage.setItem('notifications', JSON.stringify(notifRes.data.notifications));
-
         const eventsRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenewsevents');
         localStorage.setItem('newsevents', JSON.stringify(eventsRes.data.newsEvent));
         const alertRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatealert');
@@ -31,8 +31,8 @@ const Login = () => {
         localStorage.setItem('admin', JSON.stringify(adminRes.data.admin));
         const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/getusers');
         localStorage.setItem('users', JSON.stringify(usersRes.data.users));
-        const messageRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatemessages');
-        localStorage.setItem('messages', JSON.stringify(messageRes.data));
+        const messageRes = await axios.get(`https://campusbuy-backend-nkmx.onrender.com/mobilcreatemessages/${SUPER_ADMIN_ID}`);
+        localStorage.setItem('messages', JSON.stringify(messageRes.data.messages));
       } catch (err) {
         console.error('Failed to fetch data:', err);
         // Use toast instead of alert in production

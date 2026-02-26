@@ -1,8 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { FiLoader, FiXCircle, FiCheckCircle } from 'react-icons/fi';
 
+const API_URL = "https://campusbuy-backend-nkmx.onrender.com/mobilcreatecandidates";
+// Get all candidates
+const getCandidates = async () => {
+  const res = await axios.get(API_URL);
+  return res.data;
+};
+// Get results
+const getResults = async () => {
+  const res = await axios.get(`${API_URL}/results`);
+  return res.data;
+};
+
+// Admin create candidate
+const createCandidate = async (data) => {
+  const res = await axios.post(`${API_URL}/admin/create`, data);
+  return res.data;
+};
+
+// Admin delete candidate
+const deleteCandidate = async (id) => {
+  const res = await axios.delete(`${API_URL}/admin/${id}`);
+  return res.data;
+};
 
 export const CreateNotification = () => {
   const [title, setTitle] = useState('');
@@ -368,6 +391,187 @@ export const CreateAlert = () => {
           </button>
         </form>
       </div>
+    </div>
+  );
+};
+
+
+export  const AdminCreateCandidate = () => {
+  const [form, setForm] = useState({
+    office: "",
+    fullName: "",
+    photo: "",
+    manifesto: "",
+  });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await createCandidate(form);
+    alert("Candidate Created");
+  };
+
+  return (
+    <div className="max-w-md mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">Create Candidate</h1>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          name="office"
+          placeholder="Office (e.g President)"
+          className="w-full border p-3 rounded"
+          onChange={handleChange}
+        />
+
+        <input
+          name="fullName"
+          placeholder="Full Name"
+          className="w-full border p-3 rounded"
+          onChange={handleChange}
+        />
+
+        <input
+          name="photo"
+          placeholder="Photo URL"
+          className="w-full border p-3 rounded"
+          onChange={handleChange}
+        />
+
+        <textarea
+          name="manifesto"
+          placeholder="Manifesto"
+          className="w-full border p-3 rounded"
+          onChange={handleChange}
+        />
+
+        <button className="w-full bg-green-600 text-white py-3 rounded">
+          Create
+        </button>
+      </form>
+    </div>
+  );
+};
+
+
+export const ResultsPage = () => {
+  const [results, setResults] = useState([]);
+
+  useEffect(() => {
+    fetchResults();
+  }, []);
+
+  const fetchResults = async () => {
+    const data = await getResults();
+    setResults(data);
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Election Results</h1>
+
+      {results.map((r, index) => (
+        <div
+          key={index}
+          className="border p-4 rounded-lg mb-4 shadow"
+        >
+          <h2 className="font-semibold">{r.office}</h2>
+          <p>{r.candidate}</p>
+          <p className="text-blue-600 font-bold">
+            {r.totalVotes} votes
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+
+
+export const AdminManageCandidates = () => {
+  const [candidates, setCandidates] = useState([]);
+
+  useEffect(() => {
+    fetchCandidates();
+  }, []);
+
+  const fetchCandidates = async () => {
+    const data = await getCandidates();
+    setCandidates(data);
+  };
+
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this candidate?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteCandidate(id);
+      alert("Candidate deleted successfully");
+      fetchCandidates(); // refresh list
+    } catch (error) {
+      alert("Delete failed");
+    }
+  };
+
+  // Group by office
+  const grouped = candidates.reduce((acc, candidate) => {
+    acc[candidate.office] = acc[candidate.office] || [];
+    acc[candidate.office].push(candidate);
+    return acc;
+  }, {});
+
+  return (
+    <div className="max-w-5xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-8">
+        Manage Candidates
+      </h1>
+
+      {Object.keys(grouped).map((office) => (
+        <div key={office} className="mb-10">
+          <h2 className="text-xl font-semibold mb-4">
+            {office}
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {grouped[office].map((candidate) => (
+              <div
+                key={candidate._id}
+                className="border rounded-xl p-4 shadow"
+              >
+                {candidate.photo && (
+                  <img
+                    src={candidate.photo}
+                    alt={candidate.fullName}
+                    className="h-24 w-24 rounded-full object-cover mb-4"
+                  />
+                )}
+
+                <h3 className="font-bold">
+                  {candidate.fullName}
+                </h3>
+
+                <p className="text-sm text-gray-600 mb-4">
+                  {candidate.manifesto}
+                </p>
+
+                <button
+                  onClick={() =>
+                    handleDelete(candidate._id)
+                  }
+                  className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                >
+                  Delete Candidate
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
