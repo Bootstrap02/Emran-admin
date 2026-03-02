@@ -18,7 +18,7 @@ const Login = () => {
     setError(''); // Clear error on input change
   };
   useEffect(() => {
-    const SUPER_ADMIN_ID = '6996c5148745bad128aaf963';
+    const SUPER_ADMIN_ID = '69a5a4265032b6f38abcdf9c';
     const fetchData = async () => {
       try {
         const notifRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenotifications');
