@@ -63,11 +63,11 @@ const AdminHeader = () => {
       title: 'Information MGt',
       icon: <FiBell className="text-xl" />,
       items: [
-        { label: 'Create Notification', path: `/notifications/${admin._id}`, icon: <FiPlusCircle /> },
+        { label: 'Create Notification', path: `/notifications/${admin.id}`, icon: <FiPlusCircle /> },
         { label: 'View Notifications', path: '/allnotifications', icon: <FiList /> },
-        { label: 'Create Alert', path: `/alerts/${admin._id}`, icon: <FiPlusCircle /> },
+        { label: 'Create Alert', path: `/alerts/${admin.id}`, icon: <FiPlusCircle /> },
         { label: 'View Alerts', path: '/allalerts', icon: <FiList /> },
-        { label: 'Create Newsevent', path: `/newsevents/${admin._id}`, icon: <FiPlusCircle /> },
+        { label: 'Create Newsevent', path: `/newsevents/${admin.id}`, icon: <FiPlusCircle /> },
         { label: 'View Newsevents', path: '/allnewsevents', icon: <FiList /> },
       ]
     },
