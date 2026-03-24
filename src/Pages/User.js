@@ -681,25 +681,391 @@ export const AllUsers = () => {
 
 
 
+// export const UserEdit = () => {
+//   const { id } = useParams();
+//   const navigate = useNavigate();
+
+//   // ============ STATE ============
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [selectedYear, setSelectedYear] = useState('');
+
+//   const [formData, setFormData] = useState({
+//     fullname: '',
+//     email: '',
+//     phone: '',
+//     role: '',
+//     position: '',
+//     address: '',
+//     staffId: '',
+//     pensionId: '',
+//     dateOfRetirement: '', // <-- use date input
+//     departmentOfRetirement: '',
+//     companyAtRetirement: '',
+//     locationOfRetirement: '',
+//     nextOfKin: '',
+//     nextOfKinEmail: '',
+//     nextOfKinPhone: '',
+//     beneficiary: '',
+//     beneficiaryEmail: '',
+//     beneficiaryPhone: '',
+//     signupApproved: false,
+//     signupDisapproved: false,
+//     isVerified: false,
+//     registration: {
+//       payment: false,
+//       amount: 0,
+//     },
+//     duesUpdates: {},
+//   });
+
+//   // ============ AUTH CHECK ============
+//   useEffect(() => {
+//     const admin = JSON.parse(localStorage.getItem('adminData'));
+//     const adminToken = JSON.parse(localStorage.getItem('adminToken'));
+//     if (!admin && !adminToken) navigate('/');
+//   }, [navigate]);
+
+//   // ============ FETCH USER ============
+//   useEffect(() => {
+//     const fetchUser = async () => {
+//       try {
+//         const res = await axios.get(
+//           `https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/finduser/${id}`
+//         );
+
+//         const user = res.data.user || res.data;
+
+//         // Determine latest dues year
+//         const duesEntries = user.dues ? Object.entries(user.dues) : [];
+//         const sortedYears = duesEntries.map(([year]) => year).sort((a, b) => Number(a) - Number(b));
+//         const latestYear = sortedYears[sortedYears.length - 1] || '';
+//         setSelectedYear(latestYear);
+
+//         setFormData({
+//           fullname: user.fullname || '',
+//           email: user.email || '',
+//           phone: user.phone || '',
+//           role: user.role || 'prospect',
+//           position: user.position || '',
+//           address: user.address || '',
+//           staffId: user.staffId || '',
+//           pensionId: user.pensionId || '',
+//           dateOfRetirement: user.dateOfRetirement
+//             ? user.dateOfRetirement.split('T')[0]
+//             : '',
+//           departmentOfRetirement: user.departmentOfRetirement || '',
+//           companyAtRetirement: user.companyAtRetirement || '',
+//           locationOfRetirement: user.locationOfRetirement || '',
+//           nextOfKin: user.nextOfKin || '',
+//           nextOfKinEmail: user.nextOfKinEmail || '',
+//           nextOfKinPhone: user.nextOfKinPhone || '',
+//           beneficiary: user.beneficiary || '',
+//           beneficiaryEmail: user.beneficiaryEmail || '',
+//           beneficiaryPhone: user.beneficiaryPhone || '',
+//           signupApproved: user.signupApproved || false,
+//           signupDisapproved: user.signupDisapproved || false,
+//           isVerified: user.isVerified || false,
+//           registration: {
+//             payment: user.registration?.payment || false,
+//             amount: user.registration?.amount || 0,
+//           },
+//           duesUpdates: user.dues || {},
+//         });
+
+//         setLoading(false);
+//       } catch (err) {
+//         console.error(err);
+//         setError('Failed to load user details');
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchUser();
+//   }, [id]);
+
+//   // ============ HANDLERS ============
+//   const handleChange = (e) => {
+//     const { name, value, type, checked } = e.target;
+//     setFormData((prev) => ({
+//       ...prev,
+//       [name]: type === 'checkbox' ? checked : value,
+//     }));
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     if (!window.confirm('Save changes to this user?')) return;
+
+//     try {
+//       await axios.put(
+//         'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/updateuser/',
+//         {
+//           id,
+//           ...formData,
+//           isAdmin: true,
+//         }
+//       );
+
+//       alert('User updated successfully!');
+//       navigate('/admin/users');
+//     } catch (err) {
+//       console.error(err);
+//       alert('Failed to update user: ' + (err.response?.data?.message || err.message));
+//     }
+//   };
+
+//   if (loading)
+//     return (
+//       <div className="text-center py-20 text-2xl text-[#001F5B] animate-pulse">
+//         Loading user details...
+//       </div>
+//     );
+
+//   if (error)
+//     return (
+//       <div className="text-center py-20 text-2xl text-red-600">{error}</div>
+//     );
+
+//   // ============ UI ============
+//   return (
+//     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+//       <div className="max-w-5xl mx-auto">
+//         <button
+//           onClick={() => navigate('/admin/users')}
+//           className="flex items-center gap-3 text-[#E30613] hover:text-[#c20511] font-bold text-xl mb-10 transition"
+//         >
+//           <FiArrowLeft className="text-2xl" />
+//           Back to All Users
+//         </button>
+
+//         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-t-8 border-[#E30613]">
+//           {/* HEADER */}
+//           <div className="bg-gradient-to-r from-[#001F5B] to-[#0A3D6B] text-white px-10 py-12 text-center">
+//             <FiUser className="w-28 h-28 mx-auto mb-6 opacity-80" />
+//             <h1 className="text-4xl font-bold">{formData.fullname}</h1>
+//             <p className="text-xl opacity-90">{formData.role}</p>
+//           </div>
+
+//           <form onSubmit={handleSubmit} className="p-10 space-y-8">
+//             {/* BASIC INFO */}
+//             {[
+//               { label: 'Full Name', name: 'fullname' },
+//               { label: 'Email', name: 'email', type: 'email' },
+//               { label: 'Phone', name: 'phone' },
+//               { label: 'Position', name: 'position' },
+//               { label: 'Address', name: 'address' },
+//               { label: 'Staff ID', name: 'staffId' },
+//               { label: 'Pension ID', name: 'pensionId' },
+//               { label: 'Date of Retirement', name: 'dateOfRetirement', type: 'date' },
+//               { label: 'Department of Retirement', name: 'departmentOfRetirement' },
+//             ].map((field) => (
+//               <div key={field.name}>
+//                 <label className="block text-lg font-medium text-gray-700 mb-2">
+//                   {field.label}
+//                 </label>
+//                 <input
+//                   type={field.type || 'text'}
+//                   name={field.name}
+//                   value={formData[field.name]}
+//                   onChange={handleChange}
+//                   className="w-full px-6 py-4 border border-gray-300 rounded-xl"
+//                 />
+//               </div>
+//             ))}
+
+//             {/* COMPANY & LOCATION */}
+//             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+//               <div>
+//                 <label className="block text-lg font-medium mb-2">Company at Retirement</label>
+//                 <select
+//                   name="companyAtRetirement"
+//                   value={formData.companyAtRetirement}
+//                   onChange={handleChange}
+//                   className="w-full px-6 py-4 border border-gray-300 rounded-xl"
+//                 >
+//                   <option value="">Select Company</option>
+//                   <option value="MPN">MPN</option>
+//                   <option value="EEPNL">EEPNL</option>
+//                 </select>
+//               </div>
+//               <div>
+//                 <label className="block text-lg font-medium mb-2">Location of Retirement</label>
+//                 <select
+//                   name="locationOfRetirement"
+//                   value={formData.locationOfRetirement}
+//                   onChange={handleChange}
+//                   className="w-full px-6 py-4 border border-gray-300 rounded-xl"
+//                 >
+//                   <option value="">Select Location</option>
+//                   <option value="Lagos">Lagos</option>
+//                   <option value="QIT/Eket">QIT/Eket</option>
+//                   <option value="Port Harcourt/Onne">Port Harcourt/Onne</option>
+//                   <option value="Bonny">Bonny</option>
+//                   <option value="USA">USA</option>
+//                   <option value="Europe">Europe</option>
+//                   <option value="Asia">Asia</option>
+//                 </select>
+//               </div>
+//             </div>
+
+//             {/* ROLE */}
+//             <div>
+//               <label className="block text-lg font-medium mb-2">Role</label>
+//               <select
+//                 name="role"
+//                 value={formData.role}
+//                 onChange={handleChange}
+//                 className="w-full px-6 py-4 border border-gray-300 rounded-xl"
+//               >
+//                 <option value="prospect">Prospect</option>
+//                 <option value="prospectiveMember">Prospective Member</option>
+//                 <option value="member">Member</option>
+//                 <option value="admin">Admin</option>
+//               </select>
+//             </div>
+
+//             {/* REGISTRATION */}
+//             <div className="border-t pt-8">
+//               <h3 className="text-2xl font-bold text-[#001F5B] mb-6">Registration Fee</h3>
+//               <div className="flex items-center gap-4 mb-6">
+//                 <input
+//                   type="checkbox"
+//                   checked={formData.registration.payment}
+//                   onChange={(e) =>
+//                     setFormData((prev) => ({
+//                       ...prev,
+//                       registration: {
+//                         ...prev.registration,
+//                         payment: e.target.checked,
+//                       },
+//                     }))
+//                   }
+//                   className="w-6 h-6"
+//                 />
+//                 <label className="text-lg font-medium">Paid</label>
+//               </div>
+
+//               <input
+//                 type="number"
+//                 placeholder="Amount"
+//                 value={formData.registration.amount}
+//                 onChange={(e) =>
+//                   setFormData((prev) => ({
+//                     ...prev,
+//                     registration: {
+//                       ...prev.registration,
+//                       amount: e.target.value,
+//                     },
+//                   }))
+//                 }
+//                 className="w-full px-6 py-4 border border-gray-300 rounded-xl"
+//               />
+//             </div>
+
+//             {/* DUES */}
+//             <div className="border-t pt-8">
+//               <h3 className="text-2xl font-bold text-[#001F5B] mb-6">Annual Dues</h3>
+
+//               <select
+//                 value={selectedYear}
+//                 onChange={(e) => setSelectedYear(e.target.value)}
+//                 className="w-full px-6 py-4 border border-gray-300 rounded-xl mb-6"
+//               >
+//                 {Object.keys(formData.duesUpdates).map((year) => (
+//                   <option key={year} value={year}>
+//                     {year}
+//                   </option>
+//                 ))}
+//               </select>
+
+//               {selectedYear && (
+//                 <>
+//                   <div className="flex items-center gap-4 mb-6">
+//                     <input
+//                       type="checkbox"
+//                       checked={formData.duesUpdates[selectedYear]?.payment || false}
+//                       onChange={(e) =>
+//                         setFormData((prev) => ({
+//                           ...prev,
+//                           duesUpdates: {
+//                             ...prev.duesUpdates,
+//                             [selectedYear]: {
+//                               ...prev.duesUpdates[selectedYear],
+//                               payment: e.target.checked,
+//                             },
+//                           },
+//                         }))
+//                       }
+//                       className="w-6 h-6"
+//                     />
+//                     <label className="text-lg font-medium">Paid</label>
+//                   </div>
+
+//                   <input
+//                     type="number"
+//                     placeholder="Amount"
+//                     value={formData.duesUpdates[selectedYear]?.amount || 0}
+//                     onChange={(e) =>
+//                       setFormData((prev) => ({
+//                         ...prev,
+//                         duesUpdates: {
+//                           ...prev.duesUpdates,
+//                           [selectedYear]: {
+//                             ...prev.duesUpdates[selectedYear],
+//                             amount: e.target.value,
+//                           },
+//                         },
+//                       }))
+//                     }
+//                     className="w-full px-6 py-4 border border-gray-300 rounded-xl"
+//                   />
+//                 </>
+//               )}
+//             </div>
+
+//             {/* SAVE */}
+//             <div className="flex justify-end gap-6 mt-10">
+//               <button
+//                 type="button"
+//                 onClick={() => navigate('/admin/users')}
+//                 className="px-10 py-4 border border-gray-300 rounded-xl"
+//               >
+//                 Cancel
+//               </button>
+//               <button
+//                 type="submit"
+//                 className="px-10 py-4 bg-[#E30613] text-white rounded-xl hover:bg-[#c20511] transition font-bold flex items-center gap-3"
+//               >
+//                 <FiSave /> Save Changes
+//               </button>
+//             </div>
+//           </form>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+
 export const UserEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // ============ STATE ============
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedYear, setSelectedYear] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const [formData, setFormData] = useState({
     fullname: '',
     email: '',
     phone: '',
-    role: '',
+    role: 'prospect',
     position: '',
     address: '',
     staffId: '',
     pensionId: '',
-    dateOfRetirement: '', // <-- use date input
+    dateOfRetirement: '',
     departmentOfRetirement: '',
     companyAtRetirement: '',
     locationOfRetirement: '',
@@ -712,35 +1078,38 @@ export const UserEdit = () => {
     signupApproved: false,
     signupDisapproved: false,
     isVerified: false,
-    registration: {
-      payment: false,
-      amount: 0,
-    },
-    duesUpdates: {},
+    registration: { payment: false, amount: 0, dueDate: '' },
+    dues: {}, // year -> { payment, amount, dueDate }
   });
 
-  // ============ AUTH CHECK ============
-  useEffect(() => {
-    const admin = JSON.parse(localStorage.getItem('adminData'));
-    const adminToken = JSON.parse(localStorage.getItem('adminToken'));
-    if (!admin && !adminToken) navigate('/');
-  }, [navigate]);
+  const [selectedDuesYear, setSelectedDuesYear] = useState('');
 
-  // ============ FETCH USER ============
+  // Generate years from 2022 to current year + 1 (dynamic)
+const currentYear = new Date().getFullYear();
+const startYear = 2022;
+const endYear = currentYear + 1; // Allows planning for next year
+const availableYears = Array.from(
+  { length: endYear - startYear + 1 },
+  (_, i) => startYear + i
+);
+
+  // Fetch user data
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const res = await axios.get(
           `https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/finduser/${id}`
         );
-
         const user = res.data.user || res.data;
 
-        // Determine latest dues year
-        const duesEntries = user.dues ? Object.entries(user.dues) : [];
-        const sortedYears = duesEntries.map(([year]) => year).sort((a, b) => Number(a) - Number(b));
-        const latestYear = sortedYears[sortedYears.length - 1] || '';
-        setSelectedYear(latestYear);
+        // Prepare dues object
+        const duesData = user.dues || {};
+        // Ensure all recent years exist (even if empty)
+        availableYears.forEach(year => {
+          if (!duesData[year]) {
+            duesData[year] = { payment: false, amount: 0, dueDate: '' };
+          }
+        });
 
         setFormData({
           fullname: user.fullname || '',
@@ -752,7 +1121,7 @@ export const UserEdit = () => {
           staffId: user.staffId || '',
           pensionId: user.pensionId || '',
           dateOfRetirement: user.dateOfRetirement
-            ? user.dateOfRetirement.split('T')[0]
+            ? new Date(user.dateOfRetirement).toISOString().split('T')[0]
             : '',
           departmentOfRetirement: user.departmentOfRetirement || '',
           companyAtRetirement: user.companyAtRetirement || '',
@@ -766,17 +1135,21 @@ export const UserEdit = () => {
           signupApproved: user.signupApproved || false,
           signupDisapproved: user.signupDisapproved || false,
           isVerified: user.isVerified || false,
-          registration: {
-            payment: user.registration?.payment || false,
-            amount: user.registration?.amount || 0,
-          },
-          duesUpdates: user.dues || {},
+          registration: user.registration || { payment: false, amount: 0, dueDate: '' },
+          dues: duesData,
         });
+
+        // Default to latest year with data or current year
+        const yearsWithData = Object.keys(duesData).filter(y => duesData[y].amount > 0 || duesData[y].payment);
+        setSelectedDuesYear(
+          yearsWithData.length > 0
+            ? Math.max(...yearsWithData.map(Number))
+            : currentYear.toString()
+        );
 
         setLoading(false);
       } catch (err) {
-        console.error(err);
-        setError('Failed to load user details');
+        setError('Failed to load user');
         setLoading(false);
       }
     };
@@ -784,18 +1157,42 @@ export const UserEdit = () => {
     fetchUser();
   }, [id]);
 
-  // ============ HANDLERS ============
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+
+    if (name.startsWith('dues.')) {
+      const [_, year, field] = name.split('.');
+      setFormData(prev => ({
+        ...prev,
+        dues: {
+          ...prev.dues,
+          [year]: {
+            ...prev.dues[year],
+            [field]: type === 'checkbox' ? checked : value,
+          },
+        },
+      }));
+    } else if (name === 'registration.payment') {
+      setFormData(prev => ({
+        ...prev,
+        registration: { ...prev.registration, payment: checked },
+      }));
+    } else if (name.startsWith('registration.')) {
+      setFormData(prev => ({
+        ...prev,
+        registration: { ...prev.registration, [name.split('.')[1]]: value },
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!window.confirm('Save changes to this user?')) return;
+    if (!window.confirm('Save changes?')) return;
 
     try {
       await axios.put(
@@ -807,97 +1204,113 @@ export const UserEdit = () => {
         }
       );
 
-      alert('User updated successfully!');
-      navigate('/admin/users');
+      setSuccessMsg('User updated successfully!');
+      setTimeout(() => setSuccessMsg(''), 3000);
     } catch (err) {
-      console.error(err);
-      alert('Failed to update user: ' + (err.response?.data?.message || err.message));
+      setError(err.response?.data?.message || 'Update failed');
     }
   };
 
-  if (loading)
-    return (
-      <div className="text-center py-20 text-2xl text-[#001F5B] animate-pulse">
-        Loading user details...
-      </div>
-    );
+  const addNewDuesYear = () => {
+    const newYear = (Math.max(...Object.keys(formData.dues).map(Number)) + 1).toString();
+    if (!formData.dues[newYear]) {
+      setFormData(prev => ({
+        ...prev,
+        dues: {
+          ...prev.dues,
+          [newYear]: { payment: false, amount: 0, dueDate: '' },
+        },
+      }));
+      setSelectedDuesYear(newYear);
+    }
+  };
 
-  if (error)
-    return (
-      <div className="text-center py-20 text-2xl text-red-600">{error}</div>
-    );
+  if (loading) return <div className="text-center py-20 text-2xl text-[#001F5B] animate-pulse">Loading...</div>;
+  if (error) return <div className="text-center py-20 text-2xl text-red-600">{error}</div>;
 
-  // ============ UI ============
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
+        {/* Back Button */}
         <button
           onClick={() => navigate('/admin/users')}
-          className="flex items-center gap-3 text-[#E30613] hover:text-[#c20511] font-bold text-xl mb-10 transition"
+          className="flex items-center gap-2 text-[#E30613] hover:text-[#c20511] font-semibold text-lg mb-6 transition"
         >
-          <FiArrowLeft className="text-2xl" />
-          Back to All Users
+          <FiArrowLeft /> Back to Users
         </button>
 
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-t-8 border-[#E30613]">
-          {/* HEADER */}
-          <div className="bg-gradient-to-r from-[#001F5B] to-[#0A3D6B] text-white px-10 py-12 text-center">
-            <FiUser className="w-28 h-28 mx-auto mb-6 opacity-80" />
-            <h1 className="text-4xl font-bold">{formData.fullname}</h1>
-            <p className="text-xl opacity-90">{formData.role}</p>
+        {/* Success/Error Messages */}
+        {successMsg && (
+          <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded">
+            {successMsg}
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
+            {error}
+          </div>
+        )}
+
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border-t-8 border-[#E30613]">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#001F5B] to-[#0A3D6B] text-white px-8 py-10 text-center">
+            <h1 className="text-3xl sm:text-4xl font-bold">{formData.fullname || 'User Profile'}</h1>
+            <p className="text-lg opacity-90 mt-2">{formData.role?.toUpperCase()}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-10 space-y-8">
-            {/* BASIC INFO */}
-            {[
-              { label: 'Full Name', name: 'fullname' },
-              { label: 'Email', name: 'email', type: 'email' },
-              { label: 'Phone', name: 'phone' },
-              { label: 'Position', name: 'position' },
-              { label: 'Address', name: 'address' },
-              { label: 'Staff ID', name: 'staffId' },
-              { label: 'Pension ID', name: 'pensionId' },
-              { label: 'Date of Retirement', name: 'dateOfRetirement', type: 'date' },
-              { label: 'Department of Retirement', name: 'departmentOfRetirement' },
-            ].map((field) => (
-              <div key={field.name}>
-                <label className="block text-lg font-medium text-gray-700 mb-2">
-                  {field.label}
-                </label>
-                <input
-                  type={field.type || 'text'}
-                  name={field.name}
-                  value={formData[field.name]}
-                  onChange={handleChange}
-                  className="w-full px-6 py-4 border border-gray-300 rounded-xl"
-                />
-              </div>
-            ))}
+          <form onSubmit={handleSubmit} className="p-6 sm:p-10 space-y-8">
+            {/* BASIC INFO - Grid Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { label: 'Full Name', name: 'fullname' },
+                { label: 'Email', name: 'email', type: 'email' },
+                { label: 'Phone', name: 'phone' },
+                { label: 'Position', name: 'position' },
+                { label: 'Address', name: 'address' },
+                { label: 'Staff ID', name: 'staffId' },
+                { label: 'Pension ID', name: 'pensionId' },
+                { label: 'Date of Retirement', name: 'dateOfRetirement', type: 'date' },
+                { label: 'Department', name: 'departmentOfRetirement' },
+              ].map(field => (
+                <div key={field.name}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {field.label}
+                  </label>
+                  <input
+                    type={field.type || 'text'}
+                    name={field.name}
+                    value={formData[field.name] || ''}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E30613] focus:border-[#E30613] transition"
+                  />
+                </div>
+              ))}
+            </div>
 
             {/* COMPANY & LOCATION */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-lg font-medium mb-2">Company at Retirement</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Company at Retirement</label>
                 <select
                   name="companyAtRetirement"
-                  value={formData.companyAtRetirement}
+                  value={formData.companyAtRetirement || ''}
                   onChange={handleChange}
-                  className="w-full px-6 py-4 border border-gray-300 rounded-xl"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E30613]"
                 >
-                  <option value="">Select Company</option>
+                  <option value="">Select</option>
                   <option value="MPN">MPN</option>
                   <option value="EEPNL">EEPNL</option>
                 </select>
               </div>
               <div>
-                <label className="block text-lg font-medium mb-2">Location of Retirement</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location of Retirement</label>
                 <select
                   name="locationOfRetirement"
-                  value={formData.locationOfRetirement}
+                  value={formData.locationOfRetirement || ''}
                   onChange={handleChange}
-                  className="w-full px-6 py-4 border border-gray-300 rounded-xl"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E30613]"
                 >
-                  <option value="">Select Location</option>
+                  <option value="">Select</option>
                   <option value="Lagos">Lagos</option>
                   <option value="QIT/Eket">QIT/Eket</option>
                   <option value="Port Harcourt/Onne">Port Harcourt/Onne</option>
@@ -909,135 +1322,157 @@ export const UserEdit = () => {
               </div>
             </div>
 
-            {/* ROLE */}
-            <div>
-              <label className="block text-lg font-medium mb-2">Role</label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full px-6 py-4 border border-gray-300 rounded-xl"
-              >
-                <option value="prospect">Prospect</option>
-                <option value="prospectiveMember">Prospective Member</option>
-                <option value="member">Member</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-
-            {/* REGISTRATION */}
-            <div className="border-t pt-8">
-              <h3 className="text-2xl font-bold text-[#001F5B] mb-6">Registration Fee</h3>
-              <div className="flex items-center gap-4 mb-6">
+            {/* ROLE & FLAGS */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E30613]"
+                >
+                  <option value="prospect">Prospect</option>
+                  <option value="prospectiveMember">Prospective Member</option>
+                  <option value="member">Member</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
-                  checked={formData.registration.payment}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      registration: {
-                        ...prev.registration,
-                        payment: e.target.checked,
-                      },
-                    }))
-                  }
-                  className="w-6 h-6"
+                  checked={formData.signupApproved}
+                  onChange={handleChange}
+                  name="signupApproved"
+                  className="w-5 h-5 text-[#E30613]"
                 />
-                <label className="text-lg font-medium">Paid</label>
+                <label className="text-sm font-medium">Signup Approved</label>
               </div>
-
-              <input
-                type="number"
-                placeholder="Amount"
-                value={formData.registration.amount}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    registration: {
-                      ...prev.registration,
-                      amount: e.target.value,
-                    },
-                  }))
-                }
-                className="w-full px-6 py-4 border border-gray-300 rounded-xl"
-              />
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={formData.isVerified}
+                  onChange={handleChange}
+                  name="isVerified"
+                  className="w-5 h-5 text-[#E30613]"
+                />
+                <label className="text-sm font-medium">Verified</label>
+              </div>
             </div>
 
-            {/* DUES */}
+            {/* REGISTRATION FEE */}
             <div className="border-t pt-8">
-              <h3 className="text-2xl font-bold text-[#001F5B] mb-6">Annual Dues</h3>
+              <h3 className="text-2xl font-bold text-[#001F5B] mb-4">Registration Fee</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={formData.registration.payment}
+                    onChange={handleChange}
+                    name="registration.payment"
+                    className="w-5 h-5 text-[#E30613]"
+                  />
+                  <label className="text-lg font-medium">Paid</label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Amount</label>
+                  <input
+                    type="number"
+                    name="registration.amount"
+                    value={formData.registration.amount}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Due Date</label>
+                  <input
+                    type="date"
+                    name="registration.dueDate"
+                    value={formData.registration.dueDate || ''}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* ANNUAL DUES - Enhanced Section */}
+            <div className="border-t pt-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <h3 className="text-2xl font-bold text-[#001F5B]">Annual Dues</h3>
+                <button
+                  type="button"
+                  onClick={addNewDuesYear}
+                  className="px-6 py-2 bg-[#001F5B] text-white rounded-lg hover:bg-[#0A3D6B] transition text-sm font-medium"
+                >
+                  + Add New Year
+                </button>
+              </div>
 
               <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                className="w-full px-6 py-4 border border-gray-300 rounded-xl mb-6"
+                value={selectedDuesYear}
+                onChange={(e) => setSelectedDuesYear(e.target.value)}
+                className="w-full sm:w-64 px-4 py-3 border border-gray-300 rounded-lg mb-6 focus:ring-2 focus:ring-[#E30613]"
               >
-                {Object.keys(formData.duesUpdates).map((year) => (
-                  <option key={year} value={year}>
+                <option value="">Select Year</option>
+                {availableYears.map(year => (
+                  <option key={year} value={year.toString()}>
                     {year}
                   </option>
                 ))}
               </select>
 
-              {selectedYear && (
-                <>
-                  <div className="flex items-center gap-4 mb-6">
+              {selectedDuesYear && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 bg-gray-50 p-6 rounded-xl">
+                  <div className="flex items-center gap-3">
                     <input
                       type="checkbox"
-                      checked={formData.duesUpdates[selectedYear]?.payment || false}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          duesUpdates: {
-                            ...prev.duesUpdates,
-                            [selectedYear]: {
-                              ...prev.duesUpdates[selectedYear],
-                              payment: e.target.checked,
-                            },
-                          },
-                        }))
-                      }
-                      className="w-6 h-6"
+                      checked={formData.dues[selectedDuesYear]?.payment || false}
+                      onChange={handleChange}
+                      name={`dues.${selectedDuesYear}.payment`}
+                      className="w-5 h-5 text-[#E30613]"
                     />
-                    <label className="text-lg font-medium">Paid</label>
+                    <label className="text-lg font-medium">Paid for {selectedDuesYear}</label>
                   </div>
-
-                  <input
-                    type="number"
-                    placeholder="Amount"
-                    value={formData.duesUpdates[selectedYear]?.amount || 0}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        duesUpdates: {
-                          ...prev.duesUpdates,
-                          [selectedYear]: {
-                            ...prev.duesUpdates[selectedYear],
-                            amount: e.target.value,
-                          },
-                        },
-                      }))
-                    }
-                    className="w-full px-6 py-4 border border-gray-300 rounded-xl"
-                  />
-                </>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Amount Paid</label>
+                    <input
+                      type="number"
+                      name={`dues.${selectedDuesYear}.amount`}
+                      value={formData.dues[selectedDuesYear]?.amount || 0}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Due Date</label>
+                    <input
+                      type="date"
+                      name={`dues.${selectedDuesYear}.dueDate`}
+                      value={formData.dues[selectedDuesYear]?.dueDate || ''}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                    />
+                  </div>
+                </div>
               )}
             </div>
 
-            {/* SAVE */}
-            <div className="flex justify-end gap-6 mt-10">
+            {/* SAVE / CANCEL */}
+            <div className="flex flex-col sm:flex-row justify-end gap-4 mt-10">
               <button
                 type="button"
                 onClick={() => navigate('/admin/users')}
-                className="px-10 py-4 border border-gray-300 rounded-xl"
+                className="px-8 py-4 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-10 py-4 bg-[#E30613] text-white rounded-xl hover:bg-[#c20511] transition font-bold flex items-center gap-3"
+                className="px-8 py-4 bg-[#E30613] text-white rounded-xl hover:bg-[#c20511] transition font-bold flex items-center justify-center gap-3 shadow-md"
               >
-                <FiSave /> Save Changes
+                <FiSave className="text-xl" /> Save Changes
               </button>
             </div>
           </form>
@@ -1046,7 +1481,6 @@ export const UserEdit = () => {
     </div>
   );
 };
-
 export const FindUser = () => {
   const navigate = useNavigate();
   const [searchType, setSearchType] = useState('name'); // name, email, phone
