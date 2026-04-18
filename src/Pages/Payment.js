@@ -61,10 +61,39 @@ export const ConfirmedPayments = () => {
           p.userId === payment.userId ? { ...p, status: 'Confirmed' } : p
         )
       );
+      if(response.status === 400){
+         setPayments(prev =>
+        prev.map(p =>
+          p.userId === payment.userId ? { ...p, status: 'Confirmed' } : p
+        )
+      );
+      }
     } catch (err) {
-      console.error('Confirm error:', err.response?.data || err.message);
-      alert(err.response?.data?.message || 'Failed to confirm payment');
+    const errorResponse = err.response;
+
+    console.error('Confirm error:', errorResponse?.data || err.message);
+
+    if (errorResponse?.status === 400) {
+      // Status 400 → "payment wipe" / rejection case
+      alert(errorResponse.data?.message || `Payment for ${payment.fullname} was rejected or already recorded.`);
+
+      // Optional: Mark as "Rejected" or "Wiped" in UI
+      setPayments(prev =>
+        prev.map(p =>
+          p.userId === payment.userId 
+            ? { ...p, status: 'Rejected' }  // or 'Wiped' if you prefer
+            : p
+        )
+      );
+
+      // You can also do additional cleanup here if needed (e.g. remove from list)
+      // setPayments(prev => prev.filter(p => p.userId !== payment.userId));
+
+    } else {
+      // Other errors (network, 500, etc.)
+      alert(errorResponse?.data?.message || 'Failed to confirm payment');
     }
+  }
   };
 
   // Handle payment rejection
