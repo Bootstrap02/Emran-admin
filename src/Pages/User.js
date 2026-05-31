@@ -2029,7 +2029,7 @@ const resendPaymentEmail = async (user) => {
           </span>
           {selectedDetailUser.registration?.amount > 0 && (
             <span className="ml-2 text-gray-600">
-              (£{selectedDetailUser.registration.amount})
+              (₦{selectedDetailUser.registration.amount})
             </span>
           )}
         </div>
@@ -2059,7 +2059,7 @@ const resendPaymentEmail = async (user) => {
                       {data?.payment ? 'Paid' : 'Unpaid'}
                       {data?.amount > 0 && (
                         <span className="ml-2 text-gray-500">
-                          (£{data.amount})
+                          (₦{data.amount})
                         </span>
                       )}
                     </span>
