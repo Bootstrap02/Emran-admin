@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   FiMessageSquare, FiEdit, FiTrash2, FiUser, FiX, FiSend,
-  FiArrowLeft, FiSave, FiMail, FiSearch, FiPhone, FiDownload
+  FiArrowLeft, FiSave, FiSearch, FiPhone, FiDownload
 } from 'react-icons/fi';
 import * as XLSX from 'xlsx';
 import axios from 'axios';
