@@ -36,7 +36,7 @@ function App() {
         <Route path="/messages" element={<Messages />} />
         <Route path="/news-events" element={<PrivateRoute><NewsEvents /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
-        <Route path="/support" element={<PrivateRoute><Support /></PrivateRoute>} />
+        <Route path="/support" element={<Support />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
