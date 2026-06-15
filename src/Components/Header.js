@@ -56,7 +56,8 @@ const AdminHeader = () => {
       title: 'Messages',
       icon: <FiMessageSquare className="text-xl" />,
       items: [
-        { label: 'View All', path: '/messages', icon: <FiList /> },
+        { label: 'Inbox', path: '/messages', icon: <FiList /> },
+        { label: 'Send ', path: '/support', icon: <FiMessageSquare /> },
       ]
     },
      {
