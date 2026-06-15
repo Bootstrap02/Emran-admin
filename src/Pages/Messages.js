@@ -1,240 +1,229 @@
-import React, { useState, useRef, useEffect } from 'react';
+// pages/Admin/AdminSupport.jsx
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiX, FiSend, FiUser } from 'react-icons/fi';
+import { FiSearch, FiSend, FiUser, FiMail, FiPhone, FiCheckCircle, FiXCircle, FiLoader } from 'react-icons/fi';
+
+const API = 'https://campusbuy-backend-nkmx.onrender.com';
 
 const Messages = () => {
-  const [selectedChat, setSelectedChat] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [replyText, setReplyText] = useState('');
-  const [loadingChat, setLoadingChat] = useState(false);
-  const [sending, setSending] = useState(false);
+  const [users,       setUsers]       = useState([]);
+  const [filtered,   setFiltered]    = useState([]);
+  const [search,     setSearch]      = useState('');
+  const [selected,   setSelected]    = useState(null);
+  const [subject,    setSubject]     = useState('');
+  const [message,    setMessage]     = useState('');
+  const [sending,    setSending]     = useState(false);
+  const [feedback,   setFeedback]    = useState(null);
+  const [loadingUsers, setLoadingUsers] = useState(true);
 
-  const messages = JSON.parse(localStorage.getItem('messages')) || [];
-  const admin = JSON.parse(localStorage.getItem('adminData')) || {};
+  const adminData = JSON.parse(localStorage.getItem('adminData') || '{}');
+  const adminName = adminData?.fullname || 'EMRAN Admin';
 
-  const messagesEndRef = useRef(null);
-
-  // Auto scroll to bottom when messages update
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [selectedChat]);
+    const fetchUsers = async () => {
+      try {
+        const res = await axios.get(`${API}/mobilcreateadmin/users`);
+        const list = res.data.users || [];
+        setUsers(list);
+        setFiltered(list);
+      } catch (err) {
+        console.error('Failed to load users:', err);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+    fetchUsers();
+  }, []);
 
-  const openChatModal = async (chat) => {
+  useEffect(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) { setFiltered(users); return; }
+    setFiltered(users.filter(u =>
+      u.fullname?.toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q) ||
+      u.phone?.includes(q)
+    ));
+  }, [search, users]);
+
+  const showFeedback = (type, text) => {
+    setFeedback({ type, text });
+    setTimeout(() => setFeedback(null), 4000);
+  };
+
+  const handleSend = async () => {
+    if (!selected)       return showFeedback('error', 'Please select a member first.');
+    if (!subject.trim()) return showFeedback('error', 'Please enter a subject.');
+    if (!message.trim()) return showFeedback('error', 'Please enter a message.');
+
+    setSending(true);
     try {
-      setModalOpen(true);
-      setLoadingChat(true);
-      setReplyText('');
-      const response = await axios.get(
-        `https://campusbuy-backend-nkmx.onrender.com/mobilcreatemessages/user/${chat.user}`
-      );
-      const userData = response.data.user;
-      setSelectedChat({
-        userId: userData._id.toString(),
-        userName: userData.fullname,
-        messages: userData.messages || [],
+      await axios.post(`${API}/mobilcreateuser/support-email`, {
+        userId:   selected._id,
+        subject:  subject.trim(),
+        message:  message.trim(),
+        adminName,
       });
-    } catch (error) {
-      console.error(error);
-      alert("Failed to load conversation");
-      setModalOpen(false);
-    } finally {
-      setLoadingChat(false);
-    }
-  };
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setSelectedChat(null);
-    setReplyText('');
-  };
-
-  const sendReply = async () => {
-    if (!replyText.trim() || !selectedChat) return;
-
-    try {
-      setSending(true);
-
-      const response = await axios.post(
-        'https://campusbuy-backend-nkmx.onrender.com/mobilcreatemessages/admincreatemessage',
-        {
-          id: selectedChat.userId,
-          adminId: admin.id,
-          content: replyText.trim(),
-        }
-      );
-
-      const newMessage = response.data.message;
-
-      setSelectedChat((prev) => ({
-        ...prev,
-        messages: [...prev.messages, newMessage],
-      }));
-
-      setReplyText('');
+      showFeedback('success', `Message sent to ${selected.email}`);
+      setSubject('');
+      setMessage('');
+      setSelected(null);
     } catch (err) {
-      console.error(err);
-      alert('Failed to send message');
+      showFeedback('error', err.response?.data?.message || 'Failed to send message.');
     } finally {
       setSending(false);
     }
   };
 
+  const roleColor = (role) => {
+    if (role === 'member')            return 'bg-green-100 text-green-700';
+    if (role === 'prospectiveMember') return 'bg-yellow-100 text-yellow-700';
+    if (role === 'prospect')          return 'bg-gray-100 text-gray-600';
+    return 'bg-blue-100 text-blue-700';
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-[#001F5B] mb-4">
-            Messages & Conversations
-          </h1>
-          <p className="text-xl text-gray-600">
-            View and reply to messages
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-10">
 
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
-          <div className="divide-y divide-gray-200">
-            {messages.length === 0 ? (
-              <div className="p-16 text-center text-gray-500 text-xl">
-                No messages yet
-              </div>
-            ) : (
-              messages.map((chat) => (
-                <div
-                  key={chat._id}
-                  onClick={() => openChatModal(chat)}
-                  className="flex items-center gap-6 p-6 hover:bg-gray-50 transition cursor-pointer"
-                >
-                  <div className="flex-shrink-0">
-                    <div className="w-16 h-16 rounded-full bg-[#E30613]/10 flex items-center justify-center">
-                      <FiUser className="text-3xl text-[#E30613]" />
-                    </div>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <p className="text-lg font-semibold text-gray-900 truncate">
-                      {chat.userName}
-                    </p>
-                    <p className="text-gray-600 truncate">
-                      {chat.content}
-                    </p>
-                  </div>
-
-                  <div className="text-sm text-gray-500 whitespace-nowrap">
-                    {new Date(chat.createdAt).toLocaleString()}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold text-[#001F5B]">Member Support</h1>
+        <p className="text-gray-500 mt-1">Send a message directly to a member's registered email address.</p>
       </div>
 
-      {/* Chat Modal */}
-      {modalOpen && (
-        <div
-          className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4"
-          onClick={closeModal}
-        >
-          <div
-            className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="bg-gradient-to-r from-[#001F5B] to-[#0A3D6B] text-white px-8 py-6 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <FiUser className="text-4xl text-white" />
-                <div>
-                  <h2 className="text-2xl font-bold">
-                    {selectedChat?.userName || "Loading..."}
-                  </h2>
-                  <p className="text-sm opacity-90">Conversation</p>
-                </div>
-              </div>
-              <button
-                onClick={closeModal}
-                className="text-white hover:text-[#E30613] text-3xl"
-              >
-                <FiX />
-              </button>
-            </div>
-
-            {/* Messages Area */}
-            <div className="flex-1 p-6 overflow-y-auto bg-gray-50">
-              {loadingChat ? (
-                <div className="flex justify-center items-center h-full text-gray-500">
-                  Loading conversation...
-                </div>
-              ) : selectedChat?.messages?.length === 0 ? (
-                <div className="text-center text-gray-500">
-                  No messages yet
-                </div>
-              ) : (
-                selectedChat?.messages?.map((msg) => {
-                   const isUserMessage = msg.createdBy === selectedChat.userId;
-                    console.log(selectedChat.userId)
-                   console.log(selectedChat.messages[5])
-                   console.log(typeof selectedChat.userId);           // correct
-                    console.log(typeof selectedChat.messages[5].createdBy); // correct
-                  return(
-                  <div
-                    key={msg._id}
-                    className={`mb-6 flex ${
-                     isUserMessage
-                        ? 'justify-end'
-                        : 'justify-start'
-                    }`}
-                  >
-                    <div
-                      className={`max-w-[75%] rounded-2xl px-6 py-4 shadow ${
-          isUserMessage
-            ? 'bg-[#E30613] text-white rounded-br-none'
-            : 'bg-white text-gray-800 rounded-bl-none'
-        }`}
-                    >
-                      <p className="text-base leading-relaxed">
-                        {msg.content}
-                      </p>
-                      <p className="text-xs mt-2 opacity-70 text-right">
-                        {new Date(msg.createdAt).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  )
-                  
-})
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Reply Input */}
-            <div className="bg-white border-t border-gray-200 p-6 flex items-center gap-4">
-              <input
-                type="text"
-                placeholder="Type your reply..."
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                onKeyDown={(e) =>
-                  e.key === 'Enter' && sendReply()
-                }
-                className="flex-1 px-6 py-4 border border-gray-300 rounded-full focus:outline-none focus:border-[#E30613] transition"
-              />
-              <button
-                onClick={sendReply}
-                disabled={!replyText.trim() || sending}
-                className={`p-4 rounded-full transition ${
-                  replyText.trim() && !sending
-                    ? 'bg-[#E30613] text-white hover:bg-[#c20511]'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                {sending ? '...' : <FiSend className="text-xl" />}
-              </button>
-            </div>
-          </div>
+      {/* Feedback toast */}
+      {feedback && (
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl text-white text-sm font-semibold ${feedback.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+          {feedback.type === 'success' ? <FiCheckCircle size={18}/> : <FiXCircle size={18}/>}
+          {feedback.text}
         </div>
       )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+
+        {/* ── LEFT: Member selector ── */}
+        <div className="bg-white rounded-3xl shadow-xl p-6 flex flex-col gap-4">
+          <h2 className="text-lg font-bold text-[#001F5B]">Select Member</h2>
+
+          {/* Search */}
+          <div className="relative">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16}/>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by name, email or phone…"
+              className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E30613]/30 focus:border-[#E30613]"
+            />
+          </div>
+
+          {/* Member list */}
+          <div className="flex-1 overflow-y-auto max-h-[420px] flex flex-col gap-2 pr-1">
+            {loadingUsers ? (
+              <div className="flex items-center justify-center py-16 text-gray-400">
+                <FiLoader className="animate-spin mr-2" size={20}/> Loading members…
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-12 text-gray-400 text-sm">No members found.</div>
+            ) : filtered.map(u => (
+              <button key={u._id} onClick={() => setSelected(u)}
+                className={`w-full text-left px-4 py-3 rounded-2xl border transition flex items-start gap-3 ${
+                  selected?._id === u._id
+                    ? 'border-[#E30613] bg-red-50 shadow'
+                    : 'border-gray-100 bg-gray-50 hover:border-[#E30613]/30 hover:bg-red-50/40'
+                }`}>
+                {/* Avatar */}
+                <div className="w-10 h-10 rounded-full bg-[#001F5B]/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {u.image?.[0]
+                    ? <img src={u.image[0]} alt={u.fullname} className="w-full h-full object-cover"/>
+                    : <FiUser size={16} className="text-[#001F5B]"/>
+                  }
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-[#001F5B] text-sm truncate">{u.fullname}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${roleColor(u.role)}`}>{u.role}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
+                    <FiMail size={11}/><span className="truncate">{u.email}</span>
+                  </div>
+                  {u.phone && (
+                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                      <FiPhone size={11}/><span>{u.phone}</span>
+                    </div>
+                  )}
+                </div>
+                {selected?._id === u._id && (
+                  <FiCheckCircle size={18} className="text-[#E30613] flex-shrink-0 mt-1"/>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Selected summary */}
+          {selected && (
+            <div className="bg-[#001F5B]/5 rounded-2xl px-4 py-3 text-sm text-[#001F5B]">
+              <span className="font-bold">Selected:</span> {selected.fullname}
+              <span className="text-gray-500 ml-2">({selected.email})</span>
+            </div>
+          )}
+        </div>
+
+        {/* ── RIGHT: Compose message ── */}
+        <div className="bg-white rounded-3xl shadow-xl p-6 flex flex-col gap-5">
+          <h2 className="text-lg font-bold text-[#001F5B]">Compose Message</h2>
+
+          {/* To field (read-only preview) */}
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">To</label>
+            <div className={`px-4 py-3 rounded-xl border text-sm ${selected ? 'border-green-200 bg-green-50 text-green-800 font-medium' : 'border-gray-200 bg-gray-50 text-gray-400'}`}>
+              {selected ? `${selected.fullname} <${selected.email}>` : 'No member selected'}
+            </div>
+          </div>
+
+          {/* Subject */}
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Subject <span className="text-[#E30613]">*</span></label>
+            <input
+              value={subject}
+              onChange={e => setSubject(e.target.value)}
+              placeholder="e.g. Re: Your membership dues"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E30613]/30 focus:border-[#E30613]"
+            />
+          </div>
+
+          {/* Message */}
+          <div className="flex-1">
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Message <span className="text-[#E30613]">*</span></label>
+            <textarea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              placeholder="Type your message here…"
+              rows={10}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E30613]/30 focus:border-[#E30613] resize-none leading-relaxed"
+            />
+          </div>
+
+          {/* Sender tag */}
+          <div className="text-xs text-gray-400">
+            Sending as: <span className="font-semibold text-gray-600">{adminName}</span> via EMRAN Secretariat
+          </div>
+
+          {/* Send button */}
+          <button
+            onClick={handleSend}
+            disabled={sending || !selected || !subject.trim() || !message.trim()}
+            className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-sm transition ${
+              sending || !selected || !subject.trim() || !message.trim()
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-[#E30613] hover:bg-[#c20511] text-white shadow-lg active:scale-95'
+            }`}>
+            {sending
+              ? <><FiLoader className="animate-spin" size={16}/> Sending…</>
+              : <><FiSend size={16}/> Send Message</>
+            }
+          </button>
+        </div>
+
+      </div>
     </div>
   );
 };
