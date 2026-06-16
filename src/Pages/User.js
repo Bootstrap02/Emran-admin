@@ -6,7 +6,7 @@ import {
 } from 'react-icons/fi';
 import * as XLSX from 'xlsx';
 import axios from 'axios';
-import ReplyEmailModal from '../../Components/ReplyEmailModal';
+import ReplyEmailModal from './ReplyEmailModal';
 
 // ── Helper: export users to Excel ───────────────────────────────────────────
 const exportToExcel = (users, filename = 'EMRAN_Users') => {
