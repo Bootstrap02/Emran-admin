@@ -1,39 +1,50 @@
 
-
 // pages/Admin/AdminSupport.jsx
 //
-// THE "SUPPORT" COMPONENT — separate from Messages.jsx.
-// Purpose: shows existing conversations (the inbox) and lets you reply to
-// whichever one you click. No search here — that's what Messages.jsx is for.
+// ONE component, two jobs:
+//  1) Search for ANY member (name/email/phone, same pattern as FindUser) and
+//     send them a fresh message — this goes straight to compose, no extra step.
+//  2) Browse existing conversations (the inbox) at the bottom — clicking one
+//     opens a read-first modal showing the actual message thread, with a
+//     Reply button inside it that loads the same compose panel above.
 //
-// Layout: the reply panel is pinned at the top and never scrolls. Only the
-// conversation list below it scrolls (its own capped-height box), with a
-// delete icon per row so old threads don't pile up.
+// Layout: the search + compose panel is pinned at the top of the page and
+// never scrolls. Only the conversation history below it scrolls internally
+// (its own capped-height box), with a delete icon per row.
 //
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import {
-  FiSend, FiUser, FiMail, FiCheckCircle, FiXCircle, FiLoader,
-  FiX, FiTrash2, FiInbox, FiClock, FiCornerUpLeft,
+  FiSearch, FiSend, FiUser, FiMail, FiPhone, FiCheckCircle, FiXCircle,
+  FiLoader, FiX, FiTrash2, FiInbox, FiClock, FiCornerUpLeft,
 } from 'react-icons/fi';
 
 const API = 'https://campusbuy-backend-nkmx.onrender.com';
 
 const Support = () => {
-  /* ── Reply panel (top, pinned) ── */
+  /* ── Search (mirrors FindUser exactly: type → press Search) ── */
+  const [searchType, setSearchType]   = useState('name'); // name | email | phone
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState(null); // null = no search run yet
+  const [searchLoading, setSearchLoading]  = useState(false);
+  const [searchError, setSearchError]      = useState('');
+
+  /* ── Compose (shared by both the search flow and the inbox-reply flow) ── */
   const [selectedUser, setSelectedUser] = useState(null);
   const [subject, setSubject]           = useState('');
   const [message, setMessage]           = useState('');
   const [sending, setSending]           = useState(false);
   const [feedback, setFeedback]         = useState(null);
 
-  /* ── Conversation list (bottom, scrollable) ── */
+  /* ── History (scrollable, below) ── */
   const [conversations, setConversations] = useState([]);
   const [loadingInbox, setLoadingInbox]    = useState(true);
   const [deletingId, setDeletingId]        = useState(null);
 
   /* ── Read-first modal: clicking a conversation opens this to show the
-        actual message before doing anything else. Reply lives inside it. ── */
+        actual message before doing anything else. Reply lives inside it.
+        (Search results skip this — picking a search result goes straight
+        to compose, since there's no existing message to read yet.) ── */
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [viewUser, setViewUser]           = useState(null);
   const [viewMessages, setViewMessages]   = useState([]);
@@ -62,16 +73,75 @@ const Support = () => {
     setTimeout(() => setFeedback(null), 4000);
   };
 
-  /* Loads a person into the pinned reply panel above */
-  const selectConversation = (user) => {
-    if (!user) return;
-    setSelectedUser(user);
+  /* ── Search: identical pattern to FindUser — built as a query-string URL,
+        triggered only by submit, not on every keystroke. ── */
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) { setSearchError('Please enter a search term'); return; }
+
+    setSearchLoading(true);
+    setSearchError('');
+    setSearchResults(null);
+
+    try {
+      const res = await axios.get(
+        `${API}/mobilcreateadmin/findusername?type=${searchType}&query=${encodeURIComponent(searchQuery.trim())}`
+      );
+      setSearchResults(res.data.users || res.data || []);
+    } catch (err) {
+      const errMsg = err.response?.data?.message || err.message || 'Failed to search users';
+      setSearchError(errMsg);
+      console.error('Search error:', err);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  /* Picking a search result goes straight to compose — there's no existing
+     message to read yet, so the read-first modal doesn't apply here. */
+  const pickUser = (u) => {
+    setSelectedUser(u);
+    setSubject('');
+    setMessage('');
+    setSearchResults(null);
+    setSearchQuery('');
+    setSearchError('');
+  };
+
+  const clearSelected = () => {
+    setSelectedUser(null);
     setSubject('');
     setMessage('');
   };
 
-  /* Clicking a conversation row opens the read-first modal instead of
-     jumping straight to reply — you need to read the message first. */
+  const handleSend = async () => {
+    if (!selectedUser)    return showFeedback('error', 'Please find and select a member first.');
+    if (!subject.trim())  return showFeedback('error', 'Please enter a subject.');
+    if (!message.trim())  return showFeedback('error', 'Please enter a message.');
+
+    setSending(true);
+    try {
+      await axios.post(`${API}/mobilcreateuser/support-email`, {
+        userId:  selectedUser._id,
+        subject: subject.trim(),
+        message: message.trim(),
+        adminName,
+      });
+      showFeedback('success', `Message sent to ${selectedUser.email}`);
+      setSubject('');
+      setMessage('');
+      setSelectedUser(null);
+      fetchInbox(); // refresh history so the new/updated conversation appears
+    } catch (err) {
+      showFeedback('error', err.response?.data?.message || 'Failed to send message.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  /* Clicking a conversation row in the history list opens the read-first
+     modal instead of jumping straight to reply — you read it, then reply
+     from inside the modal. This is the part that's different from search. */
   const openViewModal = async (conv) => {
     if (!conv?.user) return;
     setViewUser(conv.user);
@@ -97,42 +167,14 @@ const Support = () => {
     setViewMessages([]);
   };
 
-  /* The Reply button lives inside the read modal — clicking it closes the
-     modal and loads that person into the pinned reply panel above. */
+  /* Reply button inside the read modal: closes it, loads that person into
+     the same compose panel the search flow uses, scrolls you up to it. */
   const handleReplyFromModal = () => {
-    selectConversation(viewUser);
-    closeViewModal();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const clearSelected = () => {
-    setSelectedUser(null);
+    setSelectedUser(viewUser);
     setSubject('');
     setMessage('');
-  };
-
-  const handleSend = async () => {
-    if (!selectedUser)   return showFeedback('error', 'Select a conversation below first.');
-    if (!subject.trim()) return showFeedback('error', 'Please enter a subject.');
-    if (!message.trim()) return showFeedback('error', 'Please enter a message.');
-
-    setSending(true);
-    try {
-      await axios.post(`${API}/mobilcreateuser/support-email`, {
-        userId:  selectedUser._id,
-        subject: subject.trim(),
-        message: message.trim(),
-        adminName,
-      });
-      showFeedback('success', `Message sent to ${selectedUser.email}`);
-      setSubject('');
-      setMessage('');
-      fetchInbox(); // refresh so the updated "last message" reflects the reply
-    } catch (err) {
-      showFeedback('error', err.response?.data?.message || 'Failed to send message.');
-    } finally {
-      setSending(false);
-    }
+    closeViewModal();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (e, userId) => {
@@ -166,12 +208,10 @@ const Support = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
 
-        {/* ════════════════ TOP — pinned reply panel, never scrolls ════════════════ */}
+        {/* ════════════════ TOP — fixed, never scrolls ════════════════ */}
         <div className="sticky top-4 z-20 bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 sm:p-8 mb-8">
-          <h1 className="text-2xl font-extrabold text-[#001F5B] mb-1 flex items-center gap-2">
-            <FiInbox className="text-[#E30613]" /> Support Inbox
-          </h1>
-          <p className="text-gray-500 text-sm mb-6">Pick a conversation below to reply — it'll appear here.</p>
+          <h1 className="text-2xl font-extrabold text-[#001F5B] mb-1">Member Support</h1>
+          <p className="text-gray-500 text-sm mb-6">Find a member to send a fresh message, or reply to an existing conversation below.</p>
 
           {feedback && (
             <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl mb-5 text-sm font-semibold ${
@@ -183,12 +223,68 @@ const Support = () => {
           )}
 
           {!selectedUser ? (
-            <div className="text-center py-10 text-gray-400">
-              <FiInbox size={36} className="mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No conversation selected. Choose one from the list below.</p>
-            </div>
+            <>
+              {/* ── Search form — same shape as FindUser ── */}
+              <form onSubmit={handleSearch}>
+                <div className="flex flex-wrap gap-5 mb-4">
+                  {['name', 'email', 'phone'].map((t) => (
+                    <label key={t} className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="searchType" value={t} checked={searchType === t}
+                        onChange={(e) => setSearchType(e.target.value)}
+                        className="w-4 h-4 text-[#E30613] border-gray-300 focus:ring-[#E30613]" />
+                      <span className="text-sm font-medium text-gray-700 capitalize">By {t}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 w-full">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={
+                      searchType === 'name' ? 'Type a full name…' :
+                      searchType === 'email' ? 'Type an email…' : 'Type a phone number…'
+                    }
+                    className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#E30613] focus:ring-2 focus:ring-[#E30613]/30 transition text-sm"
+                  />
+                  <button type="submit" disabled={searchLoading}
+                    className="w-full sm:w-auto px-5 py-3 bg-[#E30613] text-white rounded-xl hover:bg-[#c20511] transition font-bold flex items-center justify-center gap-2 text-sm flex-shrink-0">
+                    {searchLoading ? <FiLoader className="animate-spin" /> : <FiSearch />} Search
+                  </button>
+                </div>
+              </form>
+
+              {searchError && (
+                <p className="text-red-600 text-sm mt-3">{searchError}</p>
+              )}
+
+              {/* ── Search results ── */}
+              {searchResults !== null && (
+                <div className="mt-5 border border-gray-100 rounded-2xl overflow-hidden max-h-72 overflow-y-auto">
+                  {searchResults.length === 0 ? (
+                    <div className="text-center py-8 text-gray-400 text-sm">No members found matching that search.</div>
+                  ) : searchResults.map((u) => (
+                    <button key={u._id} onClick={() => pickUser(u)}
+                      className="w-full text-left px-5 py-4 flex items-center gap-4 border-b border-gray-50 last:border-b-0 hover:bg-red-50/40 transition">
+                      <div className="w-10 h-10 rounded-full bg-[#001F5B]/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {u.image?.[0]
+                          ? <img src={u.image[0]} alt={u.fullname} className="w-full h-full object-cover" />
+                          : <FiUser size={16} className="text-[#001F5B]" />
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-[#001F5B] text-sm truncate">{u.fullname}</p>
+                        <div className="flex items-center gap-1 text-xs text-gray-500"><FiMail size={11} />{u.email}</div>
+                        {u.phone && <div className="flex items-center gap-1 text-xs text-gray-400"><FiPhone size={11} />{u.phone}</div>}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           ) : (
             <>
+              {/* ── Selected member + compose (reached via search OR via modal Reply) ── */}
               <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-2xl px-5 py-3 mb-5">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 overflow-hidden border border-green-200">
@@ -198,8 +294,8 @@ const Support = () => {
                     }
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-green-800 truncate">Replying to {selectedUser.fullname}</p>
-                    <p className="text-xs text-green-600 truncate flex items-center gap-1"><FiMail size={10} />{selectedUser.email}</p>
+                    <p className="text-sm font-bold text-green-800 truncate">{selectedUser.fullname}</p>
+                    <p className="text-xs text-green-600 truncate">{selectedUser.email}</p>
                   </div>
                 </div>
                 <button onClick={clearSelected} className="text-green-700 hover:text-green-900 flex-shrink-0 ml-3">
@@ -221,7 +317,7 @@ const Support = () => {
                     Message <span className="text-[#E30613]">*</span>
                   </label>
                   <textarea value={message} onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Type your reply here…" rows={6}
+                    placeholder="Type your message here…" rows={6}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E30613]/30 focus:border-[#E30613] resize-none leading-relaxed" />
                 </div>
                 <p className="text-xs text-gray-400">
@@ -233,30 +329,31 @@ const Support = () => {
                       ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                       : 'bg-[#E30613] hover:bg-[#c20511] text-white shadow-lg active:scale-95'
                   }`}>
-                  {sending ? <><FiLoader className="animate-spin" size={16} /> Sending…</> : <><FiSend size={16} /> Send Reply</>}
+                  {sending ? <><FiLoader className="animate-spin" size={16} /> Sending…</> : <><FiSend size={16} /> Send Message</>}
                 </button>
               </div>
             </>
           )}
         </div>
 
-        {/* ════════════════ BOTTOM — scrollable conversation list, with delete ════════════════ */}
+        {/* ════════════════ BOTTOM — scrollable history, with delete ════════════════ */}
         <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-8">
-          <h2 className="text-lg font-bold text-[#001F5B] mb-1">Conversations</h2>
-          <p className="text-gray-400 text-xs mb-5">Tap a row to load it into the reply panel above, or delete a conversation entirely.</p>
+          <h2 className="text-lg font-bold text-[#001F5B] flex items-center gap-2 mb-1">
+            <FiInbox className="text-[#E30613]" /> Message History
+          </h2>
+          <p className="text-gray-400 text-xs mb-5">Tap a row to read the message first, then reply from inside it. Or delete a conversation entirely.</p>
 
           <div className="max-h-[480px] overflow-y-auto divide-y divide-gray-50 border border-gray-50 rounded-2xl">
             {loadingInbox ? (
-              <div className="text-center py-16 text-gray-400 text-sm">Loading conversations…</div>
+              <div className="text-center py-16 text-gray-400 text-sm">Loading message history…</div>
             ) : conversations.length === 0 ? (
-              <div className="text-center py-16 text-gray-400 text-sm">No messages yet.</div>
+              <div className="text-center py-16 text-gray-400 text-sm">No messages yet. Search a member above to send the first one.</div>
             ) : conversations.map((conv) => {
               if (!conv?.user?._id) return null;
               const u = conv.user;
-              const isSelected = selectedUser?._id === u._id;
               return (
                 <div key={u._id} onClick={() => openViewModal(conv)}
-                  className={`w-full text-left px-5 py-4 flex items-start gap-4 transition cursor-pointer ${isSelected ? 'bg-red-50' : 'hover:bg-gray-50'}`}>
+                  className="w-full text-left px-5 py-4 flex items-start gap-4 hover:bg-gray-50 transition cursor-pointer">
                   <div className="w-11 h-11 rounded-full bg-[#001F5B]/10 flex items-center justify-center flex-shrink-0 overflow-hidden mt-0.5">
                     {u.image?.[0]
                       ? <img src={u.image[0]} alt={u.fullname} className="w-full h-full object-cover" />
@@ -289,10 +386,9 @@ const Support = () => {
 
       </div>
 
-      {/* ════════════════ READ-FIRST MODAL ════════════════
-          Opens when you click a conversation row. Shows the actual
-          message thread so you can read it before replying. Reply
-          button lives inside here, not on the row itself. */}
+      {/* ════════════════ READ-FIRST MODAL (history rows only) ════════════════
+          Search results skip this and go straight to compose — there's no
+          existing message to read in that case. */}
       {viewModalOpen && viewUser && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4" onClick={closeViewModal}>
           <div className="bg-white rounded-3xl w-full max-w-lg max-h-[85vh] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
