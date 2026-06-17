@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  FiMessageSquare, FiEdit, FiTrash2, FiUser, FiX, FiSend,
+  FiMessageSquare, FiEdit, FiTrash2, FiX, 
   FiArrowLeft, FiSave, FiSearch, FiPhone, FiDownload
 } from 'react-icons/fi';
 import * as XLSX from 'xlsx';
