@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { FiSearch, FiUser, FiMail, FiClock, FiInbox, FiCornerUpLeft, FiLoader, FiUserPlus } from 'react-icons/fi';
-import ReplyEmailModal from '../../Components/ReplyEmailModal';
+import ReplyEmailModal from './ReplyEmailModal';
 
 const API = 'https://campusbuy-backend-nkmx.onrender.com';
 
