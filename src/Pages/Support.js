@@ -185,7 +185,7 @@ const Support = () => {
                     </label>
                   ))}
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3 w-full">
                   <input
                     type="text"
                     value={searchQuery}
@@ -194,10 +194,10 @@ const Support = () => {
                       searchType === 'name' ? 'Type a full name…' :
                       searchType === 'email' ? 'Type an email…' : 'Type a phone number…'
                     }
-                    className="flex-1 px-5 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#E30613] focus:ring-2 focus:ring-[#E30613]/30 transition text-sm"
+                    className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#E30613] focus:ring-2 focus:ring-[#E30613]/30 transition text-sm"
                   />
                   <button type="submit" disabled={searchLoading}
-                    className="px-6 py-3 bg-[#E30613] text-white rounded-xl hover:bg-[#c20511] transition font-bold flex items-center gap-2 text-sm flex-shrink-0">
+                    className="w-full sm:w-auto px-5 py-3 bg-[#E30613] text-white rounded-xl hover:bg-[#c20511] transition font-bold flex items-center justify-center gap-2 text-sm flex-shrink-0">
                     {searchLoading ? <FiLoader className="animate-spin" /> : <FiSearch />} Search
                   </button>
                 </div>
