@@ -1,94 +1,146 @@
 
 // pages/Admin/AdminSupport.jsx
 //
-// Place this file at: src/pages/Admin/AdminSupport.jsx
-// Place ReplyEmailModal.jsx at: src/Components/ReplyEmailModal.jsx
-// (the import path below assumes that exact layout — adjust if yours differs)
+// Layout: the search + compose panel is pinned at the top of the page and
+// never scrolls. Only the message-history list below it scrolls internally
+// (its own capped-height box), with a delete icon per row.
 //
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { FiSearch, FiUser, FiMail, FiClock, FiInbox, FiCornerUpLeft, FiLoader, FiUserPlus } from 'react-icons/fi';
-import ReplyEmailModal from './ReplyEmailModal';
+import {
+  FiSearch, FiSend, FiUser, FiMail, FiPhone, FiCheckCircle, FiXCircle,
+  FiLoader, FiX, FiTrash2, FiInbox, FiClock,
+} from 'react-icons/fi';
 
 const API = 'https://campusbuy-backend-nkmx.onrender.com';
 
 const Support = () => {
-  const [conversations, setConversations] = useState([]);   // inbox: users with at least 1 message
+  /* ── Search (mirrors FindUser exactly: type → press Search) ── */
+  const [searchType, setSearchType]   = useState('name'); // name | email | phone
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState(null); // null = no search run yet
+  const [searchLoading, setSearchLoading]  = useState(false);
+  const [searchError, setSearchError]      = useState('');
+
+  /* ── Compose ── */
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [subject, setSubject]           = useState('');
+  const [message, setMessage]           = useState('');
+  const [sending, setSending]           = useState(false);
+  const [feedback, setFeedback]         = useState(null);
+
+  /* ── History (scrollable, below) ── */
+  const [conversations, setConversations] = useState([]);
   const [loadingInbox, setLoadingInbox]    = useState(true);
+  const [deletingId, setDeletingId]        = useState(null);
 
-  const [search, setSearch]               = useState('');
-  const [searchResults, setSearchResults] = useState(null); // null = not searching; [] = searched, no match
-  const [searching, setSearching]         = useState(false);
+  const adminData = JSON.parse(localStorage.getItem('adminData') || '{}');
+  const adminName = adminData?.fullname || 'EMRAN Admin';
 
-  const [selected, setSelected]           = useState(null); // { user, messages }
-  const [loadingThread, setLoadingThread] = useState(false);
-  const [replyOpen, setReplyOpen]         = useState(false);
-
-  /* ── Load inbox once on mount ── */
-  useEffect(() => {
-    const fetchInbox = async () => {
-      try {
-        const res = await axios.get(`${API}/mobilcreatemessages/inbox`);
-        setConversations(res.data?.conversations || []);
-      } catch (err) {
-        console.error('Failed to load inbox:', err);
-        setConversations([]);
-      } finally {
-        setLoadingInbox(false);
-      }
-    };
-    fetchInbox();
+  const fetchInbox = useCallback(async () => {
+    setLoadingInbox(true);
+    try {
+      const res = await axios.get(`${API}/mobilcreatemessages/inbox`);
+      setConversations(res.data?.conversations || []);
+    } catch (err) {
+      console.error('Failed to load inbox:', err);
+      setConversations([]);
+    } finally {
+      setLoadingInbox(false);
+    }
   }, []);
 
-  /* ── Debounced "search ANY member by name" — same backend FindUser uses ── */
-  useEffect(() => {
-    const q = search.trim();
-    if (q.length < 2) { setSearchResults(null); return; }
+  useEffect(() => { fetchInbox(); }, [fetchInbox]);
 
-    const timer = setTimeout(async () => {
-      setSearching(true);
-      try {
-        const res = await axios.get(`${API}/mobilcreateadmin/findusername`, {
-          params: { type: 'name', query: q },
-        });
-        setSearchResults(res.data?.users || []);
-      } catch (err) {
-        console.error('Member search failed:', err);
-        setSearchResults([]);
-      } finally {
-        setSearching(false);
-      }
-    }, 350);
+  const showFeedback = (type, text) => {
+    setFeedback({ type, text });
+    setTimeout(() => setFeedback(null), 4000);
+  };
 
-    return () => clearTimeout(timer);
-  }, [search]);
+  /* ── Search: identical pattern to FindUser — built as a query-string URL,
+        triggered only by submit, not on every keystroke. ── */
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) { setSearchError('Please enter a search term'); return; }
 
-  /* ── Map of existing conversations by user id, for merging with search results ── */
-  const conversationMap = useMemo(() => {
-    const map = {};
-    conversations.forEach((c) => { if (c?.user?._id) map[c.user._id] = c; });
-    return map;
-  }, [conversations]);
+    setSearchLoading(true);
+    setSearchError('');
+    setSearchResults(null);
 
-  /* ── The list actually shown: either the inbox, or search results
-        merged with any existing conversation data for that person ── */
-  const displayList = useMemo(() => {
-    if (searchResults !== null) {
-      return searchResults
-        .filter((u) => u && u._id)
-        .map((u) => {
-          const existing = conversationMap[u._id];
-          return existing || {
-            user: { _id: u._id, fullname: u.fullname, email: u.email, image: u.image },
-            lastMessage: '',
-            lastMessageAt: null,
-            unread: false,
-            noHistory: true,
-          };
-        });
+    try {
+      const res = await axios.get(
+        `${API}/mobilcreateadmin/findusername?type=${searchType}&query=${encodeURIComponent(searchQuery.trim())}`
+      );
+      setSearchResults(res.data.users || res.data || []);
+    } catch (err) {
+      const errMsg = err.response?.data?.message || err.message || 'Failed to search users';
+      setSearchError(errMsg);
+      console.error('Search error:', err);
+    } finally {
+      setSearchLoading(false);
     }
-    return conversations.filter((c) => c && c.user);
-  }, [searchResults, conversations, conversationMap]);
+  };
+
+  const pickUser = (u) => {
+    setSelectedUser(u);
+    setSearchResults(null);
+    setSearchQuery('');
+    setSearchError('');
+  };
+
+  const clearSelected = () => {
+    setSelectedUser(null);
+    setSubject('');
+    setMessage('');
+  };
+
+  const handleSend = async () => {
+    if (!selectedUser)    return showFeedback('error', 'Please find and select a member first.');
+    if (!subject.trim())  return showFeedback('error', 'Please enter a subject.');
+    if (!message.trim())  return showFeedback('error', 'Please enter a message.');
+
+    setSending(true);
+    try {
+      await axios.post(`${API}/mobilcreateuser/support-email`, {
+        userId:  selectedUser._id,
+        subject: subject.trim(),
+        message: message.trim(),
+        adminName,
+      });
+      showFeedback('success', `Message sent to ${selectedUser.email}`);
+      setSubject('');
+      setMessage('');
+      setSelectedUser(null);
+      fetchInbox(); // refresh history so the new conversation appears
+    } catch (err) {
+      showFeedback('error', err.response?.data?.message || 'Failed to send message.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  /* Clicking a history row pre-fills the compose panel above with that person */
+  const quickReply = (user) => {
+    setSelectedUser(user);
+    setSubject('');
+    setMessage('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDelete = async (e, userId) => {
+    e.stopPropagation();
+    if (!window.confirm('Delete this entire conversation? This cannot be undone.')) return;
+    setDeletingId(userId);
+    try {
+      await axios.delete(`${API}/mobilcreatemessages/conversation/${userId}`);
+      setConversations((prev) => prev.filter((c) => c.user._id !== userId));
+    } catch (err) {
+      console.error('Failed to delete conversation:', err);
+      alert(err.response?.data?.message || 'Failed to delete conversation');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const fmtTime = (d) => {
     if (!d) return '';
@@ -101,191 +153,187 @@ const Support = () => {
       : date.toLocaleDateString([], { day: '2-digit', month: 'short' });
   };
 
-  /* ── Select a person (from inbox OR search) and load their thread ──
-        Works even for someone with zero message history. */
-  const selectPerson = async (entry) => {
-    const user = entry?.user;
-    if (!user?._id) return;
-
-    setSelected({ user, messages: [] });
-    setLoadingThread(true);
-    try {
-      const res = await axios.get(`${API}/mobilcreatemessages/user/${user._id}`);
-      const msgs = res.data?.user?.messages || [];
-      const sorted = [...msgs].sort((a, b) => new Date(a?.createdAt || 0) - new Date(b?.createdAt || 0));
-      setSelected({ user, messages: sorted });
-    } catch (err) {
-      console.error('Failed to load thread:', err);
-      setSelected({ user, messages: [] });
-    } finally {
-      setLoadingThread(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
 
-        <div className="mb-6">
-          <h1 className="text-3xl font-extrabold text-[#001F5B] flex items-center gap-3">
-            <FiInbox className="text-[#E30613]" /> Support Inbox
-          </h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            Search any member by name to message them, or pick up an existing conversation. Replies go straight to their registered email.
-          </p>
+        {/* ════════════════ TOP — fixed, never scrolls ════════════════ */}
+        <div className="sticky top-4 z-20 bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 sm:p-8 mb-8">
+          <h1 className="text-2xl font-extrabold text-[#001F5B] mb-1">Member Support</h1>
+          <p className="text-gray-500 text-sm mb-6">Find a member, then send a message straight to their registered email.</p>
+
+          {feedback && (
+            <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl mb-5 text-sm font-semibold ${
+              feedback.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+            }`}>
+              {feedback.type === 'success' ? <FiCheckCircle size={18} /> : <FiXCircle size={18} />}
+              {feedback.text}
+            </div>
+          )}
+
+          {!selectedUser ? (
+            <>
+              {/* ── Search form — same shape as FindUser ── */}
+              <form onSubmit={handleSearch}>
+                <div className="flex flex-wrap gap-5 mb-4">
+                  {['name', 'email', 'phone'].map((t) => (
+                    <label key={t} className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="searchType" value={t} checked={searchType === t}
+                        onChange={(e) => setSearchType(e.target.value)}
+                        className="w-4 h-4 text-[#E30613] border-gray-300 focus:ring-[#E30613]" />
+                      <span className="text-sm font-medium text-gray-700 capitalize">By {t}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={
+                      searchType === 'name' ? 'Type a full name…' :
+                      searchType === 'email' ? 'Type an email…' : 'Type a phone number…'
+                    }
+                    className="flex-1 px-5 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#E30613] focus:ring-2 focus:ring-[#E30613]/30 transition text-sm"
+                  />
+                  <button type="submit" disabled={searchLoading}
+                    className="px-6 py-3 bg-[#E30613] text-white rounded-xl hover:bg-[#c20511] transition font-bold flex items-center gap-2 text-sm flex-shrink-0">
+                    {searchLoading ? <FiLoader className="animate-spin" /> : <FiSearch />} Search
+                  </button>
+                </div>
+              </form>
+
+              {searchError && (
+                <p className="text-red-600 text-sm mt-3">{searchError}</p>
+              )}
+
+              {/* ── Search results ── */}
+              {searchResults !== null && (
+                <div className="mt-5 border border-gray-100 rounded-2xl overflow-hidden max-h-72 overflow-y-auto">
+                  {searchResults.length === 0 ? (
+                    <div className="text-center py-8 text-gray-400 text-sm">No members found matching that search.</div>
+                  ) : searchResults.map((u) => (
+                    <button key={u._id} onClick={() => pickUser(u)}
+                      className="w-full text-left px-5 py-4 flex items-center gap-4 border-b border-gray-50 last:border-b-0 hover:bg-red-50/40 transition">
+                      <div className="w-10 h-10 rounded-full bg-[#001F5B]/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {u.image?.[0]
+                          ? <img src={u.image[0]} alt={u.fullname} className="w-full h-full object-cover" />
+                          : <FiUser size={16} className="text-[#001F5B]" />
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-[#001F5B] text-sm truncate">{u.fullname}</p>
+                        <div className="flex items-center gap-1 text-xs text-gray-500"><FiMail size={11} />{u.email}</div>
+                        {u.phone && <div className="flex items-center gap-1 text-xs text-gray-400"><FiPhone size={11} />{u.phone}</div>}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {/* ── Selected member + compose ── */}
+              <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-2xl px-5 py-3 mb-5">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 overflow-hidden border border-green-200">
+                    {selectedUser.image?.[0]
+                      ? <img src={selectedUser.image[0]} alt={selectedUser.fullname} className="w-full h-full object-cover" />
+                      : <FiUser size={14} className="text-green-700" />
+                    }
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-green-800 truncate">{selectedUser.fullname}</p>
+                    <p className="text-xs text-green-600 truncate">{selectedUser.email}</p>
+                  </div>
+                </div>
+                <button onClick={clearSelected} className="text-green-700 hover:text-green-900 flex-shrink-0 ml-3">
+                  <FiX size={18} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                    Subject <span className="text-[#E30613]">*</span>
+                  </label>
+                  <input value={subject} onChange={(e) => setSubject(e.target.value)}
+                    placeholder="e.g. Re: Your membership dues"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E30613]/30 focus:border-[#E30613]" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                    Message <span className="text-[#E30613]">*</span>
+                  </label>
+                  <textarea value={message} onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Type your message here…" rows={6}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E30613]/30 focus:border-[#E30613] resize-none leading-relaxed" />
+                </div>
+                <p className="text-xs text-gray-400">
+                  Sending as <span className="font-semibold text-gray-600">{adminName}</span> via EMRAN Secretariat
+                </p>
+                <button onClick={handleSend} disabled={sending || !subject.trim() || !message.trim()}
+                  className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm transition ${
+                    sending || !subject.trim() || !message.trim()
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-[#E30613] hover:bg-[#c20511] text-white shadow-lg active:scale-95'
+                  }`}>
+                  {sending ? <><FiLoader className="animate-spin" size={16} /> Sending…</> : <><FiSend size={16} /> Send Message</>}
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-0 bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100" style={{ minHeight: 600 }}>
+        {/* ════════════════ BOTTOM — scrollable history, with delete ════════════════ */}
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-8">
+          <h2 className="text-lg font-bold text-[#001F5B] flex items-center gap-2 mb-1">
+            <FiInbox className="text-[#E30613]" /> Message History
+          </h2>
+          <p className="text-gray-400 text-xs mb-5">Tap a row to quickly reply to that member, or delete a conversation entirely.</p>
 
-          {/* ── LEFT: search + list ── */}
-          <div className="border-r border-gray-100 flex flex-col">
-            <div className="p-5 border-b border-gray-100">
-              <div className="relative">
-                <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search any member by name…"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E30613]/30 focus:border-[#E30613]"
-                />
-                {searching && (
-                  <FiLoader className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 animate-spin" size={15} />
-                )}
-              </div>
-              {searchResults !== null && (
-                <p className="text-xs text-gray-400 mt-2 px-1">
-                  {searchResults.length === 0 ? 'No members match that name' : `${searchResults.length} member(s) found`}
-                </p>
-              )}
-            </div>
-
-            <div className="flex-1 overflow-y-auto">
-              {loadingInbox && searchResults === null ? (
-                <div className="text-center py-20 text-gray-400 text-sm">Loading conversations…</div>
-              ) : displayList.length === 0 ? (
-                <div className="text-center py-20 text-gray-400 text-sm px-6">
-                  {searchResults !== null
-                    ? 'No members found. Try a different spelling.'
-                    : 'No messages yet — search a member above to start one.'}
-                </div>
-              ) : displayList.map((entry) => {
-                const u = entry.user;
-                const isSelected = selected?.user?._id === u._id;
-                return (
-                  <button
-                    key={u._id}
-                    onClick={() => selectPerson(entry)}
-                    className={`w-full text-left px-5 py-4 flex items-start gap-4 border-b border-gray-50 transition ${
-                      isSelected ? 'bg-red-50' : 'hover:bg-gray-50'
-                    }`}>
-                    <div className="w-11 h-11 rounded-full bg-[#001F5B]/10 flex items-center justify-center flex-shrink-0 overflow-hidden mt-0.5">
-                      {u.image?.[0]
-                        ? <img src={u.image[0]} alt={u.fullname} className="w-full h-full object-cover" />
-                        : <FiUser size={18} className="text-[#001F5B]" />
-                      }
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-semibold text-[#001F5B] text-[15px] truncate">{u.fullname}</p>
-                        {entry.lastMessageAt && (
-                          <span className="text-[11px] text-gray-400 flex-shrink-0 flex items-center gap-1">
-                            <FiClock size={9} />{fmtTime(entry.lastMessageAt)}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-400 truncate mt-0.5">{u.email}</p>
-                      {entry.noHistory ? (
-                        <p className="text-[13px] text-gray-400 italic mt-1.5">No messages yet — tap to send one</p>
-                      ) : (
-                        <p className="text-[13px] text-gray-600 truncate mt-1.5">{entry.lastMessage}</p>
+          <div className="max-h-[480px] overflow-y-auto divide-y divide-gray-50 border border-gray-50 rounded-2xl">
+            {loadingInbox ? (
+              <div className="text-center py-16 text-gray-400 text-sm">Loading message history…</div>
+            ) : conversations.length === 0 ? (
+              <div className="text-center py-16 text-gray-400 text-sm">No messages yet. Search a member above to send the first one.</div>
+            ) : conversations.map((conv) => {
+              if (!conv?.user?._id) return null;
+              const u = conv.user;
+              return (
+                <div key={u._id} onClick={() => quickReply(u)}
+                  className="w-full text-left px-5 py-4 flex items-start gap-4 hover:bg-gray-50 transition cursor-pointer">
+                  <div className="w-11 h-11 rounded-full bg-[#001F5B]/10 flex items-center justify-center flex-shrink-0 overflow-hidden mt-0.5">
+                    {u.image?.[0]
+                      ? <img src={u.image[0]} alt={u.fullname} className="w-full h-full object-cover" />
+                      : <FiUser size={18} className="text-[#001F5B]" />
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-semibold text-[#001F5B] text-[15px] truncate">{u.fullname}</p>
+                      {conv.lastMessageAt && (
+                        <span className="text-[11px] text-gray-400 flex-shrink-0 flex items-center gap-1">
+                          <FiClock size={9} />{fmtTime(conv.lastMessageAt)}
+                        </span>
                       )}
                     </div>
-                    {entry.unread && (
-                      <span className="w-2 h-2 rounded-full bg-[#E30613] flex-shrink-0 mt-2" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ── RIGHT: thread view ── */}
-          <div className="flex flex-col min-h-[400px]">
-            {!selected ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-gray-300 gap-3 px-6 text-center">
-                <FiInbox size={48} />
-                <p className="text-sm text-gray-400">Search a member or pick a conversation to get started</p>
-              </div>
-            ) : (
-              <>
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-[#001F5B]/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-                      {selected.user.image?.[0]
-                        ? <img src={selected.user.image[0]} alt={selected.user.fullname} className="w-full h-full object-cover" />
-                        : <FiUser size={16} className="text-[#001F5B]" />
-                      }
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-[#001F5B] text-sm truncate">{selected.user.fullname}</p>
-                      <p className="text-xs text-gray-500 flex items-center gap-1 truncate"><FiMail size={11} />{selected.user.email}</p>
-                    </div>
+                    <p className="text-xs text-gray-400 truncate mt-0.5">{u.email}</p>
+                    <p className="text-[13px] text-gray-600 truncate mt-1.5">{conv.lastMessage}</p>
                   </div>
-                  <button onClick={() => setReplyOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-[#E30613] hover:bg-[#c20511] text-white rounded-xl text-sm font-bold transition shadow-md active:scale-95 flex-shrink-0">
-                    <FiCornerUpLeft size={14} /> Reply via Email
+                  {conv.unread && <span className="w-2 h-2 rounded-full bg-[#E30613] flex-shrink-0 mt-2" />}
+                  <button onClick={(e) => handleDelete(e, u._id)} disabled={deletingId === u._id}
+                    title="Delete conversation"
+                    className="text-gray-300 hover:text-red-600 transition p-2 rounded-full hover:bg-red-50 flex-shrink-0">
+                    {deletingId === u._id ? <FiLoader className="animate-spin" size={16} /> : <FiTrash2 size={16} />}
                   </button>
                 </div>
-
-                <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50 flex flex-col gap-4">
-                  {loadingThread ? (
-                    <div className="text-center py-16 text-gray-400 text-sm">Loading messages…</div>
-                  ) : selected.messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center gap-3 text-gray-300">
-                      <FiUserPlus size={40} />
-                      <p className="text-sm text-gray-400">No messages in this thread yet.<br />Use "Reply via Email" to send the first one.</p>
-                    </div>
-                  ) : selected.messages.map((msg, idx) => {
-                    if (!msg) return null;
-                    const fromUser = String(msg.createdBy) === String(selected.user._id);
-                    return (
-                      <div key={msg._id || idx} className={`flex ${fromUser ? 'justify-start' : 'justify-end'}`}>
-                        <div className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-sm ${
-                          fromUser
-                            ? 'bg-white text-gray-800 rounded-tl-sm border border-gray-100'
-                            : 'bg-[#001F5B] text-white rounded-tr-sm'
-                        }`}>
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                          <p className={`text-[10px] mt-1.5 ${fromUser ? 'text-gray-400' : 'text-white/60'}`}>
-                            {msg.createdAt
-                              ? new Date(msg.createdAt).toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
-                              : ''}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="px-6 py-4 border-t border-gray-100 bg-white">
-                  <button onClick={() => setReplyOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-[#E30613]/30 text-[#E30613] rounded-xl text-sm font-semibold hover:bg-red-50 transition">
-                    <FiCornerUpLeft size={14} /> Reply — sent straight to {selected.user.email}
-                  </button>
-                </div>
-              </>
-            )}
+              );
+            })}
           </div>
         </div>
-      </div>
 
-      {/* Reusable reply modal — same one used in AllUsers / FindUser */}
-      <ReplyEmailModal
-        user={selected?.user}
-        isOpen={replyOpen}
-        onClose={() => setReplyOpen(false)}
-        defaultSubject={selected ? 'Re: Your message to EMRAN' : ''}
-      />
+      </div>
     </div>
   );
 };
