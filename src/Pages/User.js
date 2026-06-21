@@ -358,7 +358,7 @@ export const UserEdit = () => {
       address: userData.address || '',
       role: userData.role || 'prospect',
       position: userData.position || '',
-      staffId: userData.staffId || userData._id,
+      staffId: userData.staffId || '',
       pensionId: userData.pensionId || '',
       signupApproved: !!userData.signupApproved,
       signupDisapproved: !!userData.signupDisapproved,
