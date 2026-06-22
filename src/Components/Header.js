@@ -1,20 +1,22 @@
+// components/AdminHeader.jsx
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   FiMenu, FiX, FiBell, FiLogOut,
   FiAlertCircle, FiMessageSquare, FiCheckCircle, 
-   FiPlusCircle, FiList,
+  FiPlusCircle, FiList, FiRefreshCw
 } from 'react-icons/fi';
+import axios from 'axios';
 import exxonLogo from '../assets/exxonmobil-logo-white.jpg';
 
 const AdminHeader = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
   const navigate = useNavigate();
-  const admin = JSON.parse(localStorage.getItem('admin'));
-
-  // Dummy unread count (replace with real API)
+  const admin = JSON.parse(localStorage.getItem('admin') || '{}');
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -22,17 +24,51 @@ const AdminHeader = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Centralized Refresh Sync Engine
+  const handleManualRefresh = async () => {
+    const SUPER_ADMIN_ID = '69a5a4265032b6f38abcdf9c';
+    setIsRefreshing(true);
+    try {
+      const notifRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenotifications');
+      localStorage.setItem('notifications', JSON.stringify(notifRes.data.notifications || []));
+      
+      const eventsRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenewsevents');
+      localStorage.setItem('newsevents', JSON.stringify(eventsRes.data.newsEvent || []));
+      
+      const alertRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatealert');
+      localStorage.setItem('alerts', JSON.stringify(alertRes.data.alerts || []));
+      
+      const adminRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/admin');
+      localStorage.setItem('admin', JSON.stringify(adminRes.data.admin || {}));
+      
+      const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/getusers');
+      localStorage.setItem('users', JSON.stringify(usersRes.data.users || []));
+      
+      const messageRes = await axios.get(`https://campusbuy-backend-nkmx.onrender.com/mobilcreatemessages/${SUPER_ADMIN_ID}`);
+      localStorage.setItem('messages', JSON.stringify(messageRes.data.messages || []));
+      
+      console.log('✅ Local cache synchronized successfully.');
+    } catch (err) {
+      console.error('Failed to fetch data:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Run once on mounting sequence
+  useEffect(() => {
+    handleManualRefresh();
+  }, []);
+
   const handleLogout = () => {
     localStorage.clear();
     navigate('/');
   };
+
   const handleHome = () => {
     navigate('/firstpage');
   };
 
-  
-
-  // Mobile dropdown toggle
   const toggleMobileDropdown = (title) => {
     setActiveMobileDropdown(activeMobileDropdown === title ? null : title);
   };
@@ -45,7 +81,7 @@ const AdminHeader = () => {
         { label: 'Pending Signups', path: '/pending', icon: <FiList /> },
       ]
     },
-   {
+    {
       title: 'Dues Payment',
       icon: <FiAlertCircle className="text-xl" />,
       items: [
@@ -56,19 +92,18 @@ const AdminHeader = () => {
       title: 'Messages',
       icon: <FiMessageSquare className="text-xl" />,
       items: [
-      
         { label: 'Send/Reply Messages', path: '/support', icon: <FiMessageSquare /> },
       ]
     },
-     {
+    {
       title: 'Information MGt',
       icon: <FiBell className="text-xl" />,
       items: [
-        { label: 'Create Notification', path: `/notifications/${admin._id}`, icon: <FiPlusCircle /> },
+        { label: 'Create Notification', path: `/notifications/${admin?._id}`, icon: <FiPlusCircle /> },
         { label: 'View Notifications', path: '/allnotifications', icon: <FiList /> },
-        { label: 'Create Alert', path: `/alerts/${admin._id}`, icon: <FiPlusCircle /> },
+        { label: 'Create Alert', path: `/alerts/${admin?._id}`, icon: <FiPlusCircle /> },
         { label: 'View Alerts', path: '/allalerts', icon: <FiList /> },
-        { label: 'Create Newsevent', path: `/newsevents/${admin._id}`, icon: <FiPlusCircle /> },
+        { label: 'Create Newsevent', path: `/newsevents/${admin?._id}`, icon: <FiPlusCircle /> },
         { label: 'View Newsevents', path: '/allnewsevents', icon: <FiList /> },
       ]
     },
@@ -92,7 +127,7 @@ const AdminHeader = () => {
             </div>
           </NavLink>
 
-          {/* Navigation with Hover Dropdowns */}
+          {/* Navigation Dropdowns */}
           <nav className="hidden lg:flex items-center space-x-10">
             {navSections.map((section, idx) => (
               <div key={idx} className="relative group">
@@ -104,7 +139,6 @@ const AdminHeader = () => {
                   {section.icon} {section.title}
                 </button>
 
-                {/* Dropdown – no gap, stays open on hover */}
                 <div className="absolute top-full left-0 mt-0 hidden group-hover:block bg-white shadow-2xl rounded-xl min-w-[240px] py-4 border-t-4 border-[#E30613] pointer-events-auto">
                   {section.items.map((item, i) => (
                     <NavLink
@@ -121,20 +155,21 @@ const AdminHeader = () => {
             ))}
           </nav>
 
-          {/* Right Side */}
+          {/* Desktop Controls (Right Aligned) */}
           <div className="flex items-center gap-6">
-            {/* Admin Profile */}
-            <div className="flex items-center gap-4">
-              {/* <button 
-                onClick={() => navigate('/admin/profile')}
-                className="flex items-center gap-2 bg-[#E30613] text-white px-6 py-3 rounded-full font-bold hover:bg-[#c20511] transition shadow-lg"
-              >
-                <FiUser /> Admin
-              </button> */}
-              <button onClick={handleLogout} className=" text-orange-700 hover:text-[#E30613]">
-                <FiLogOut className="text-2xl" />
-              </button>
-            </div>
+            {/* Desktop Gold Refresh Action */}
+            <button 
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className="text-amber-500 hover:text-amber-400 transition-colors duration-200 disabled:opacity-50"
+              title="Refresh Global Data"
+            >
+              <FiRefreshCw className={`text-2xl ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+
+            <button onClick={handleLogout} className="text-orange-700 hover:text-[#E30613] transition-colors">
+              <FiLogOut className="text-2xl" />
+            </button>
           </div>
         </div>
       </header>
@@ -145,22 +180,47 @@ const AdminHeader = () => {
           <NavLink to="/admin">
             <img src={exxonLogo} alt="EMRAN" className="h-12" />
           </NavLink>
-          <button onClick={() => setMobileMenuOpen(true)} className="text-white text-3xl">
-            <FiMenu />
-          </button>
+          
+          <div className="flex items-center gap-5">
+            {/* Mobile Gold Refresh Action (Opposite Menu Switch) */}
+            <button 
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className="text-amber-500 hover:text-amber-400 p-1 disabled:opacity-50"
+            >
+              <FiRefreshCw className={`text-2xl ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+
+            <button onClick={() => setMobileMenuOpen(true)} className="text-white text-3xl">
+              <FiMenu />
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Mobile Menu Modal */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-[#001F5B] z-50 pt-20 px-6 overflow-y-auto">
-          <button
-            onClick={() => setMobileMenuOpen(false)}
-            className="absolute top-4 right-5 text-white text-3xl"
-          >
-            <FiX />
-          </button>
-          <nav className="space-y-4">
+          {/* Header Actions inside Drawer Modal */}
+          <div className="absolute top-4 left-6 right-5 flex items-center justify-between">
+            {/* Gold Refresh nested cleanly opposite modal exit */}
+            <button 
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className="text-amber-500 hover:text-amber-400 disabled:opacity-50"
+            >
+              <FiRefreshCw className={`text-2xl ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-white text-3xl"
+            >
+              <FiX />
+            </button>
+          </div>
+
+          <nav className="space-y-4 mt-6">
             {navSections.map((section, idx) => (
               <div key={idx}>
                 <button 
@@ -190,16 +250,16 @@ const AdminHeader = () => {
               </div>
             ))}
 
-            {/* Back and Logout */}
+            {/* Navigation Drawer Bottom Control Strip */}
             <button 
               onClick={handleHome}
-              className="w-full bg-white-600 text-white py-5 rounded-xl font-bold mt-8 text-xl"
+              className="w-full bg-white/10 text-white py-5 rounded-xl font-bold mt-8 text-xl border border-white/20"
             >
               Back
             </button>
             <button 
               onClick={handleLogout}
-              className="w-full bg-red-600 text-white py-5 rounded-xl font-bold mt-8 text-xl"
+              className="w-full bg-red-600 text-white py-5 rounded-xl font-bold mt-4 text-xl hover:bg-red-700 transition"
             >
               Sign Out
             </button>
@@ -207,8 +267,8 @@ const AdminHeader = () => {
         </div>
       )}
 
-      {/* Spacer */}
-      <div className="h-24"></div>
+      {/* Spacer layout buffer */}
+      <div className="h-24 lg:h-28"></div>
     </>
   );
 };
