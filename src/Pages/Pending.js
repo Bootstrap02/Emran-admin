@@ -65,6 +65,19 @@ export const PendingSignups = () => {
       console.error(err);
     }
   };
+  const resendWelcomeEmail = async (userId) => {
+    try {
+      const response = await axios.post(
+        'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/resendwelcomeemail',
+        { id: userId._id}
+      );
+      alert(response.data.message || 'Welcome Email resent successfully!');
+    } catch (err) {
+      console.error('Resend error:', err.response?.data || err.message);
+      alert(err.response?.data?.message || 'Failed to resend email');
+    }
+  };
+
 
   if (loading) {
     return (
