@@ -960,6 +960,9 @@ useEffect(() => {
                 <div><strong className="text-gray-700">Joined:</strong>{' '}
                   {selectedDetailUser.createdAt ? new Date(selectedDetailUser.createdAt).toLocaleDateString('en-GB') : 'N/A'}
                 </div>
+                  <div><strong className="text-gray-700">Last Login:</strong>{' '}
+                  {selectedDetailUser.lastLogin ? new Date(selectedDetailUser.lastLogin).toLocaleDateString('en-GB') : 'N/A'}
+                </div>
                 <div>
                   <strong className="text-gray-700">Registration Paid:</strong>{' '}
                   <span className={selectedDetailUser.registration?.payment ? 'text-green-600' : 'text-red-600'}>
