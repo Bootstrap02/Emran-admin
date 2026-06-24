@@ -166,6 +166,11 @@ export const PendingSignups = () => {
                           >
                             <FiXCircle className="text-3xl" />
                           </button>
+                              <button 
+                              onClick={() => resendWelcomeEmail(user)}
+                            className="text-blue-600 hover:text-blue-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-blue-50" title="Send Message">
+                            <FiMessageSquare className="text-3xl" />
+                          </button>
                         </div>
                       </td>
                     </tr>
