@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiCheckCircle, FixCircle, FiMessageSquare } from 'react-icons/fi';
+import { FiCheckCircle, FiXCircle, FiMessageSquare } from 'react-icons/fi';
 import axios from "axios";
 
 export const PendingSignups = () => {
