@@ -115,6 +115,19 @@ export const ConfirmedPayments = () => {
       alert(err.response?.data?.message || 'Failed to reject payment');
     }
   };
+  const resendWelcomeEmail = async (payment) => {
+    try {
+      const response = await axios.post(
+        'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/resendwelcomeemail',
+        { id: payment.userId}
+      );
+      alert(response.data.message || 'Welcome Email resent successfully!');
+    } catch (err) {
+      console.error('Resend error:', err.response?.data || err.message);
+      alert(err.response?.data?.message || 'Failed to resend email');
+    }
+  };
+
 
   if (loading) {
     return (
