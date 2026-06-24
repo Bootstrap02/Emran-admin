@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { FiCheckCircle, FiXCircle, FiMessageSquare } from 'react-icons/fi';
 import axios from "axios";
 
+
+
+const API = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin';
+
 export const PendingSignups = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,45 +40,83 @@ export const PendingSignups = () => {
     }
   }, [navigate]);
 
-  const handleApprove = async (userId) => {
-    if (!window.confirm('Approve this signup?')) return;
+  // const handleApprove = async (userId) => {
+  //   if (!window.confirm('Approve this signup?')) return;
 
+  //   try {
+  //     await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/approve', userId);
+  //     alert(`Approved user: ${userId.fullname}`); // Temporary feedback
+
+  //     // Refresh list (in real app, remove approved user or refetch)
+  //     setPendingUsers(prev => prev.filter(u => u._id !== userId));
+  //   } catch (err) {
+  //     alert('Failed to approve');
+  //     console.error(err);
+  //   }
+  // };
+
+  // const handleDisapprove = async (userId) => {
+  //   if (!window.confirm('Disapprove this signup?')) return;
+
+  //   try {
+  //     await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/disapprove', userId);
+  //     alert(`Disapproved user: ${userId.fullname}`);
+
+  //     // Refresh list
+  //     setPendingUsers(prev => prev.filter(u => u._id !== userId));
+  //   } catch (err) {
+  //     alert('Failed to disapprove');
+  //     console.error(err);
+  //   }
+  // };
+  // const resendWelcomeEmail = async (userId) => {
+  //   try {
+  //     console.log(userId)
+  //     console.log(userId._id)
+  //     const response = await axios.post(
+  //       'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/resendwelcomeemail',
+  //       { userId}
+  //     );
+  //     alert(response.data.message || 'Welcome Email resent successfully!');
+  //   } catch (err) {
+  //     console.error('Resend error:', err.response?.data || err.message);
+  //     alert(err.response?.data?.message || 'Failed to resend email');
+  //   }
+  // };
+const handleApprove = async (user) => {
+    if (!window.confirm(`Approve signup for ${user.fullname}?`)) return;
     try {
-      await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/approve', userId);
-      alert(`Approved user: ${userId.fullname}`); // Temporary feedback
-
-      // Refresh list (in real app, remove approved user or refetch)
-      setPendingUsers(prev => prev.filter(u => u._id !== userId));
+      // FIX: backend expects { userId } not the whole user object
+      await axios.put(`${API}/approve`, { userId: user.userId || user._id });
+      alert(`Approved: ${user.fullname}`);
+      setPendingUsers(prev => prev.filter(u => (u.userId || u._id) !== (user.userId || user._id)));
     } catch (err) {
-      alert('Failed to approve');
-      console.error(err);
+      console.error('Approve error:', err.response?.data || err.message);
+      alert(err.response?.data?.message || 'Failed to approve');
     }
   };
 
-  const handleDisapprove = async (userId) => {
-    if (!window.confirm('Disapprove this signup?')) return;
-
+  const handleDisapprove = async (user) => {
+    if (!window.confirm(`Disapprove signup for ${user.fullname}?`)) return;
     try {
-      await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/disapprove', userId);
-      alert(`Disapproved user: ${userId.fullname}`);
-
-      // Refresh list
-      setPendingUsers(prev => prev.filter(u => u._id !== userId));
+      // FIX: backend expects { userId } not the whole user object
+      await axios.put(`${API}/disapprove`, { userId: user.userId || user._id });
+      alert(`Disapproved: ${user.fullname}`);
+      setPendingUsers(prev => prev.filter(u => (u.userId || u._id) !== (user.userId || user._id)));
     } catch (err) {
-      alert('Failed to disapprove');
-      console.error(err);
+      console.error('Disapprove error:', err.response?.data || err.message);
+      alert(err.response?.data?.message || 'Failed to disapprove');
     }
   };
-  const resendWelcomeEmail = async (userId) => {
+
+  const resendWelcomeEmail = async (user) => {
     try {
-      const response = await axios.post(
-        'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/resendwelcomeemail',
-        { id: userId._id}
-      );
-      alert(response.data.message || 'Welcome Email resent successfully!');
+      // This sends the welcome instructions email (after signup approval)
+      const response = await axios.post(`${API}/resendwelcomeemail`, { id: user.userId || user._id });
+      alert(response.data.message || 'welcome email resent successfully!');
     } catch (err) {
-      console.error('Resend error:', err.response?.data || err.message);
-      alert(err.response?.data?.message || 'Failed to resend email');
+      console.error('Resend welcome email error:', err.response?.data || err.message);
+      alert(err.response?.data?.message || 'Failed to resend welcome email');
     }
   };
 

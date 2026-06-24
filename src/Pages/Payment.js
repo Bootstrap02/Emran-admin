@@ -5,6 +5,7 @@ import { FiCheckCircle, FiXCircle, FiMessageSquare } from 'react-icons/fi';
 import axios from "axios";
 
 
+const API = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin';
 
 export const ConfirmedPayments = () => {
   const [payments, setPayments] = useState([]);
@@ -115,19 +116,17 @@ export const ConfirmedPayments = () => {
       alert(err.response?.data?.message || 'Failed to reject payment');
     }
   };
+  
   const resendWelcomeEmail = async (payment) => {
     try {
-      const response = await axios.post(
-        'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/resendwelcomeemail',
-        { id: payment.userId}
-      );
-      alert(response.data.message || 'Welcome Email resent successfully!');
+      // This sends the welcome instructions email (after signup approval)
+      const response = await axios.post(`${API}/resendwelcomeemail`, { id: payment.userId || payment._id });
+      alert(response.data.message || 'welcome email resent successfully!');
     } catch (err) {
-      console.error('Resend error:', err.response?.data || err.message);
-      alert(err.response?.data?.message || 'Failed to resend email');
+      console.error('Resend welcome email error:', err.response?.data || err.message);
+      alert(err.response?.data?.message || 'Failed to resend welcome email');
     }
   };
-
 
   if (loading) {
     return (
