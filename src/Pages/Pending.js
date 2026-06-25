@@ -112,7 +112,7 @@ const handleApprove = async (user) => {
   const resendWelcomeEmail = async (user) => {
     try {
       // This sends the welcome instructions email (after signup approval)
-      const response = await axios.post(`${API}/resendwelcomeemail`, { id: user.userId || user._id });
+      const response = await axios.post(`${API}/sendwelcomeemail`, { id: user.userId || user._id });
       alert(response.data.message || 'welcome email resent successfully!');
     } catch (err) {
       console.error('Resend welcome email error:', err.response?.data || err.message);
