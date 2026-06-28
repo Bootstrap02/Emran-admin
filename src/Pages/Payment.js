@@ -13,21 +13,26 @@ export const ConfirmedPayments = () => {
   const navigate = useNavigate();
 
   // Auth check
+  
   useEffect(() => {
-    const adminData  = JSON.parse(localStorage.getItem('adminData'));
-    const adminToken = JSON.parse(localStorage.getItem('adminToken'));
-    if (!adminData || !adminToken) { navigate('/'); return; }
+  try {
+    const adminData = JSON.parse(localStorage.getItem("adminData"));
+    const adminToken = JSON.parse(localStorage.getItem("adminToken"));
 
-    try {
-      // FIX: was reading from 'admin' — correct key is 'adminData'
-      setPayments(adminData.paymentApprovals || []);
-    } catch (err) {
-      setError('Failed to load confirmed payments');
-      console.error(err);
-    } finally {
-      setLoading(false);
+    if (!adminData || !adminToken) {
+      navigate("/");
+      return;
     }
-  }, [navigate]);
+
+    setPayments(adminData?.paymentApprovals || []);
+  } catch (err) {
+    console.error("Load error:", err);
+    setError("Failed to load confirmed payments");
+    setPayments([]);
+  } finally {
+    setLoading(false);
+  }
+}, [navigate]);
 
   const handleConfirm = async (payment) => {
     if (!window.confirm(`Confirm payment for ${payment.fullname}?`)) return;
