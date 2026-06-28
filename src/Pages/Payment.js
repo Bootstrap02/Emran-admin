@@ -47,57 +47,30 @@ export const ConfirmedPayments = () => {
   // Handle payment confirmation
   const handleConfirm = async (payment) => {
     if (!window.confirm(`Confirm payment for ${payment.fullname}?`)) return;
-
     try {
-      const targetUrl = payment.year 
-        ? approveNextPayment
-        : approveCurrentPayment;
-
-      const response = await axios.put(targetUrl, { userId: payment.userId });
-
+      // payment.year === true means this is a renewal (next year dues)
+      // payment.year === false/undefined means this is first-time membership payment (current year)
+      const url = payment.year ? `${API}/approvenextpayment` : `${API}/approvepayment`;
+      const response = await axios.put(url, { userId: payment.userId });
       alert(response.data.message || `Payment confirmed for ${payment.fullname}`);
-
-      // Update UI
-      setPayments(prev =>
-        prev.map(p =>
-          p.userId === payment.userId ? { ...p, status: 'Confirmed' } : p
-        )
-      );
-      if(response.status === 400){
-         setPayments(prev =>
-        prev.map(p =>
-          p.userId === payment.userId ? { ...p, status: 'Confirmed' } : p
-        )
-      );
-      }
+      setPayments(prev => prev.map(p =>
+        p.userId === payment.userId ? { ...p, status: 'Confirmed' } : p
+      ));
     } catch (err) {
-    const errorResponse = err.response;
-
-    console.error('Confirm error:', errorResponse?.data || err.message);
-
-    if (errorResponse?.status === 400) {
-      // Status 400 → "payment wipe" / rejection case
-      alert(errorResponse.data?.message || `Payment for ${payment.fullname} was rejected or already recorded.`);
-
-      // Optional: Mark as "Rejected" or "Wiped" in UI
-      setPayments(prev =>
-        prev.map(p =>
-          p.userId === payment.userId 
-            ? { ...p, status: 'Rejected' }  // or 'Wiped' if you prefer
-            : p
-        )
-      );
-
-      // You can also do additional cleanup here if needed (e.g. remove from list)
-      // setPayments(prev => prev.filter(p => p.userId !== payment.userId));
-
-    } else {
-      // Other errors (network, 500, etc.)
-      alert(errorResponse?.data?.message || 'Failed to confirm payment');
+      const errRes = err.response;
+      console.error('Confirm error:', errRes?.data || err.message);
+      if (errRes?.status === 400) {
+        alert(errRes.data?.message || `Payment for ${payment.fullname} was rejected or already recorded.`);
+        setPayments(prev => prev.map(p =>
+          p.userId === payment.userId ? { ...p, status: 'Already Recorded' } : p
+        ));
+      } else {
+        alert(errRes?.data?.message || 'Failed to confirm payment');
+      }
     }
-  }
   };
 
+  
   // Handle payment rejection
   const handleReject = async (payment) => {
     if (!window.confirm(`Reject payment for ${payment.fullname}?`)) return;
