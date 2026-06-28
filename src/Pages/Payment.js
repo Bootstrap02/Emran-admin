@@ -1,4 +1,3 @@
-
 // src/pages/ConfirmedPayments.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -30,7 +29,6 @@ export const ConfirmedPayments = () => {
     }
   }, [navigate]);
 
-  
   const handleConfirm = async (payment) => {
     if (!window.confirm(`Confirm payment for ${payment.fullname}?`)) return;
     try {
@@ -55,7 +53,6 @@ export const ConfirmedPayments = () => {
       }
     }
   };
-
 
   const handleReject = async (payment) => {
     if (!window.confirm(`Reject payment for ${payment.fullname}?`)) return;
