@@ -30,6 +30,7 @@ export const ConfirmedPayments = () => {
     }
   }, [navigate]);
 
+  
   const handleConfirm = async (payment) => {
     if (!window.confirm(`Confirm payment for ${payment.fullname}?`)) return;
     try {
