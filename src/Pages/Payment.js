@@ -56,6 +56,7 @@ export const ConfirmedPayments = () => {
     }
   };
 
+
   const handleReject = async (payment) => {
     if (!window.confirm(`Reject payment for ${payment.fullname}?`)) return;
     try {
