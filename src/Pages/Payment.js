@@ -1,3 +1,4 @@
+
 // src/pages/ConfirmedPayments.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -13,26 +14,21 @@ export const ConfirmedPayments = () => {
   const navigate = useNavigate();
 
   // Auth check
-  
   useEffect(() => {
-  try {
-    const adminData = JSON.parse(localStorage.getItem("adminData"));
-    const adminToken = JSON.parse(localStorage.getItem("adminToken"));
+    const adminData  = JSON.parse(localStorage.getItem('adminData'));
+    const adminToken = JSON.parse(localStorage.getItem('adminToken'));
+    if (!adminData || !adminToken) { navigate('/'); return; }
 
-    if (!adminData || !adminToken) {
-      navigate("/");
-      return;
+    try {
+      // FIX: was reading from 'admin' — correct key is 'adminData'
+      setPayments(adminData.paymentApprovals || []);
+    } catch (err) {
+      setError('Failed to load confirmed payments');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-
-    setPayments(adminData?.paymentApprovals || []);
-  } catch (err) {
-    console.error("Load error:", err);
-    setError("Failed to load confirmed payments");
-    setPayments([]);
-  } finally {
-    setLoading(false);
-  }
-}, [navigate]);
+  }, [navigate]);
 
   const handleConfirm = async (payment) => {
     if (!window.confirm(`Confirm payment for ${payment.fullname}?`)) return;
