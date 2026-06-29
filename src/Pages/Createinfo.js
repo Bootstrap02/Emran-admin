@@ -4,6 +4,8 @@ import { useParams } from "react-router-dom";
 import { FiLoader, FiXCircle, FiCheckCircle } from 'react-icons/fi';
 
 const API_URL = "https://campusbuy-backend-nkmx.onrender.com/mobilcreatecandidates";
+const API_BASE = 'https://campusbuy-backend-nkmx.onrender.com';
+
 // Get all candidates
 const getCandidates = async () => {
   const res = await axios.get(API_URL);
