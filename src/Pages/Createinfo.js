@@ -51,8 +51,8 @@ export const CreateNotification = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving]   = useState(false);
-  const [items, setItems]   = useState([]);
+  // const [saving, setSaving]   = useState(false);
+  // const [items, setItems]   = useState([]);
   const [feedback, setFeedback] = useState(null); // for nice top message
 const { id } = useParams();   // ← destructuring gives you the actual string ID
   const handleSubmit = async (e) => {
