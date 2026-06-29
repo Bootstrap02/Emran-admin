@@ -14,8 +14,8 @@ export const ConfirmedPayments = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const approveCurrentPayment = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/approvepayment';
-  const approveNextPayment = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/approvenextpayment';
+  // const approveCurrentPayment = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/approvepayment';
+  // const approveNextPayment = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/approvenextpayment';
 
   // Auth check
   useEffect(() => {
