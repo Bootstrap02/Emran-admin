@@ -27,10 +27,30 @@ const deleteCandidate = async (id) => {
   return res.data;
 };
 
+// Push notification broadcast — fires after every create/update
+// Route: POST /mobilcreatenotifications/push/send-all
+const broadcastPush = async (title, message) => {
+  try {
+    await axios.post(`${API_BASE}/mobilcreatenotifications/push/send-all`, {
+      title,
+      body: message,
+      url: '/dashboard',
+    });
+    console.log('✅ Push broadcast sent');
+  } catch (err) {
+    // Push failure should never block the main save — just log it
+    console.error('Push broadcast failed:', err.response?.data || err.message);
+  }
+};
+
+
+ 
 export const CreateNotification = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving]   = useState(false);
+  const [items, setItems]   = useState([]);
   const [feedback, setFeedback] = useState(null); // for nice top message
 const { id } = useParams();   // ← destructuring gives you the actual string ID
   const handleSubmit = async (e) => {
@@ -62,6 +82,9 @@ const { id } = useParams();   // ← destructuring gives you the actual string I
 
       setTitle('');
       setContent('');
+      // ── BROADCAST push to every subscribed browser ──
+      await broadcastPush(title, content);
+
     } catch (err) {
       setFeedback({
         type: 'error',
