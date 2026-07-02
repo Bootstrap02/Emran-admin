@@ -438,7 +438,7 @@ export const UserEdit = () => {
       const formDataImg = new FormData();
       formDataImg.append('images', selectedImage);
       await axios.put(
-        `https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/uploadimages/${id}`,
+        `https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/upload-fortune-image/${id}`,
         formDataImg
       );
       setSuccessMsg('Profile photo updated successfully!');
