@@ -299,6 +299,7 @@ export const AllUsers = () => {
 // ══════════════════════════════════════════════════════════════════════════════
 // USER EDIT  — expanded with all schema fields
 // ══════════════════════════════════════════════════════════════════════════════
+
 export const UserEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -310,6 +311,12 @@ export const UserEdit = () => {
   const [initialized, setInitialized] = useState(false);
   const [selectedDuesYear, setSelectedDuesYear] = useState('');
   const [activeTab, setActiveTab] = useState('basic');
+
+  // Avatar upload state
+  const [selectedImage, setSelectedImage]     = useState(null);
+  const [imagePreview, setImagePreview]       = useState(null);
+  const [imageUploading, setImageUploading]   = useState(false);
+  const fileInputRef = React.useRef(null);
 
   const [formData, setFormData] = useState({
     fullname: '', email: '', phone: '', address: '',
@@ -412,6 +419,38 @@ export const UserEdit = () => {
     }
   };
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml'];
+    if (!allowed.includes(file.type)) { alert('Only JPG, JPEG, PNG, SVG allowed'); return; }
+    if (file.size > 5 * 1024 * 1024) { alert('Image too large — max 5MB'); return; }
+    setSelectedImage(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleImageUpload = async () => {
+    if (!selectedImage) return;
+    setImageUploading(true);
+    try {
+      // Uses the same route as the member signup image upload:
+      // PUT /mobilcreateuser/uploadimages/:userId
+      const formDataImg = new FormData();
+      formDataImg.append('images', selectedImage);
+      await axios.put(
+        `https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/uploadimages/${id}`,
+        formDataImg
+      );
+      setSuccessMsg('Profile photo updated successfully!');
+      setSelectedImage(null);
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Image upload failed');
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!window.confirm('Save changes?')) return;
@@ -485,6 +524,88 @@ export const UserEdit = () => {
 
             {activeTab === 'basic' && (
               <div className="space-y-6">
+
+                {/* ── PROFILE PHOTO UPLOAD ── */}
+                <h3 className="text-lg font-bold text-[#001F5B] border-b pb-2">Profile Photo</h3>
+                <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-gray-50 rounded-2xl">
+                  {/* Current / preview avatar */}
+                  <div className="relative flex-shrink-0">
+                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-200 flex items-center justify-center">
+                      {imagePreview || userData?.image?.[0] ? (
+                        <img
+                          src={imagePreview || userData?.image?.[0]}
+                          alt="Avatar"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-3xl font-bold text-[#001F5B]">
+                          {(formData.fullname || 'U').charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute bottom-0 right-0 bg-[#E30613] text-white rounded-full p-1.5 shadow hover:bg-[#c20511] transition"
+                      title="Choose photo"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/jpeg,image/jpg,image/png,image/svg+xml"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                  </div>
+
+                  <div className="flex-1 text-center sm:text-left">
+                    <p className="text-sm text-gray-600 mb-3">
+                      Upload a new profile photo for this member.<br />
+                      Accepted: JPG, JPEG, PNG, SVG — max 5MB.
+                    </p>
+                    <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="px-4 py-2 border-2 border-[#001F5B] text-[#001F5B] rounded-xl text-sm font-semibold hover:bg-[#001F5B] hover:text-white transition"
+                      >
+                        Choose Photo
+                      </button>
+                      {selectedImage && (
+                        <button
+                          type="button"
+                          onClick={handleImageUpload}
+                          disabled={imageUploading}
+                          className="px-4 py-2 bg-[#E30613] text-white rounded-xl text-sm font-semibold hover:bg-[#c20511] transition disabled:opacity-60"
+                        >
+                          {imageUploading ? 'Uploading...' : 'Upload Photo'}
+                        </button>
+                      )}
+                      {selectedImage && (
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedImage(null); setImagePreview(null); }}
+                          className="px-4 py-2 border border-gray-300 text-gray-500 rounded-xl text-sm hover:bg-gray-100 transition"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                    {selectedImage && (
+                      <p className="text-xs text-amber-600 mt-2">
+                        ⚠ Click "Upload Photo" to save the image — it's separate from the main Save button below.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── PERSONAL FIELDS ── */}
                 <h3 className="text-lg font-bold text-[#001F5B] border-b pb-2">Personal Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {[
@@ -738,6 +859,11 @@ export const UserEdit = () => {
     </div>
   );
 };
+    
+    
+                      
+
+
 
 
 
