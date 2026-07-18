@@ -69,7 +69,7 @@ const Login = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#001F5B] via-[#001845] to-[#0A3D6B] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Logo & Title */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 border-radius-[50%] ">
           <img 
             src={exxonLogo} 
             alt="EMRAN Admin" 
