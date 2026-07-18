@@ -73,7 +73,7 @@ const Login = () => {
           <img 
             src={exxonLogo} 
             alt="EMRAN Admin" 
-            className="h-24 mx-auto mb-6 drop-shadow-2xl border-radius-[50%]  "
+            className="h-24 mx-auto mb-6 drop-shadow-2xl  rounded-full  "
           />
           <h1 className="text-4xl font-extrabold text-white mb-2">
             Admin Portal
