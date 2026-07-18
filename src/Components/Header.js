@@ -117,8 +117,8 @@ const AdminHeader = () => {
       }`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
-          <NavLink to="/admin" className="flex items-center gap-4 group">
-            <img src={exxonLogo} alt="EMRAN" className="h-14 border-radius-[50%]  transition-transform group-hover:scale-110" />
+          <NavLink to="/admin" className="flex items-center gap-4 group border-radius-[50%]">
+            <img src={exxonLogo} alt="EMRAN" className="h-14 transition-transform group-hover:scale-110" />
             <div>
               <h1 className={`font-extrabold text-2xl ${scrolled ? 'text-[#001F5B]' : 'text-white'}`}>
                 EMRAN Admin
