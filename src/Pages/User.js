@@ -492,8 +492,7 @@ export const UserEdit = () => {
     { key: 'account', label: 'Account' },
     { key: 'dues', label: 'Dues' },
   ];
-
-  return (
+return (
     <div className="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
         <button onClick={() => navigate('/admin/users')}
@@ -620,6 +619,17 @@ export const UserEdit = () => {
                       <input type={f.type || 'text'} name={f.name} value={formData[f.name] || ''} onChange={handleChange} className={inputCls} />
                     </div>
                   ))}
+                  {/* Date of Birth — belongs in personal info, not retirement */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                    <input
+                      type="date"
+                      name="dateOfBirth"
+                      value={formData.dateOfBirth || ''}
+                      onChange={handleChange}
+                      className={inputCls}
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -639,10 +649,6 @@ export const UserEdit = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Position / Title</label>
                     <input name="position" value={formData.position || ''} onChange={handleChange} className={inputCls} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                    <input type="date" name="dateOfBirth" value={formData.dateOfBirth || ''} onChange={handleChange} className={inputCls} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date of Retirement</label>
@@ -864,6 +870,12 @@ export const UserEdit = () => {
     </div>
   );
 };
+
+  
+                      
+                    
+
+  
 
     
 
