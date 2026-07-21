@@ -322,7 +322,7 @@ export const UserEdit = () => {
     fullname: '', email: '', phone: '', address: '',
     role: 'prospect', position: '', staffId: '', pensionId: '',
     signupApproved: false, signupDisapproved: false, isVerified: false,
-    dateOfRetirement: '', companyAtRetirement: '', locationOfRetirement: '',
+    dateOfBirth: '', dateOfRetirement: '', companyAtRetirement: '', locationOfRetirement: '',
     departmentOfRetirement: '',
     spouse: '', spousePhone: '',
     nextOfKin: '', nextOfKinEmail: '', nextOfKinPhone: '',
@@ -370,6 +370,7 @@ export const UserEdit = () => {
       signupApproved: !!userData.signupApproved,
       signupDisapproved: !!userData.signupDisapproved,
       isVerified: !!userData.isVerified,
+      dateOfBirth: userData.dateOfBirth ? new Date(userData.dateOfBirth).toISOString().split('T')[0] : '',
       dateOfRetirement: userData.dateOfRetirement ? new Date(userData.dateOfRetirement).toISOString().split('T')[0] : '',
       companyAtRetirement: userData.companyAtRetirement || '',
       locationOfRetirement: userData.locationOfRetirement || '',
@@ -438,7 +439,7 @@ export const UserEdit = () => {
       const formDataImg = new FormData();
       formDataImg.append('images', selectedImage);
       await axios.put(
-        `https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/upload-fortune-image/${id}`,
+        `https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/uploadimages/${id}`,
         formDataImg
       );
       setSuccessMsg('Profile photo updated successfully!');
@@ -638,6 +639,10 @@ export const UserEdit = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Position / Title</label>
                     <input name="position" value={formData.position || ''} onChange={handleChange} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                    <input type="date" name="dateOfBirth" value={formData.dateOfBirth || ''} onChange={handleChange} className={inputCls} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date of Retirement</label>
@@ -859,12 +864,8 @@ export const UserEdit = () => {
     </div>
   );
 };
+
     
-    
-                      
-
-
-
 
 
 // ══════════════════════════════════════════════════════════════════════════════
