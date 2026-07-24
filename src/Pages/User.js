@@ -326,7 +326,7 @@ export const UserEdit = () => {
     departmentOfRetirement: '',
     spouse: '', spousePhone: '',
     nextOfKin: '', nextOfKinEmail: '', nextOfKinPhone: '',
-    beneficiary: '', beneficiaryEmail: '', beneficiaryPhone: '',
+    beneficiary: '', beneficiaryEmail: '', beneficiaryPhone: '', debt: 0,
     registration: { payment: false, amount: 0, dueDate: '' },
     dues: {},
   });
@@ -383,6 +383,7 @@ export const UserEdit = () => {
       beneficiary: userData.beneficiary || '',
       beneficiaryEmail: userData.beneficiaryEmail || '',
       beneficiaryPhone: userData.beneficiaryPhone || '',
+      debt: userData.debt || 0,
       registration: userData.registration || { payment: false, amount: 0, dueDate: '' },
       dues: duesData,
     });
@@ -826,6 +827,12 @@ return (
                     </div>
                   </div>
                 )}
+                  <div>
+                        <label className="block text-sm font-medium mb-1">Debt (₦)</label>
+                        <input type="number" name="debt" 
+                          value={formData.debt || 0} onChange={handleChange}
+                          className={inputCls} />
+                      </div>
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm border rounded-xl overflow-hidden">
