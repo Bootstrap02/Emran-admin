@@ -795,35 +795,31 @@ export const UserEdit = () => {
                 </div>
 
                 {/* ── DEBT FIELD ── */}
-                <div className={`flex items-center gap-4 px-5 py-4 rounded-xl border-2 ${
+                <div className={`rounded-xl border-2 p-4 ${
                   Number(formData.debt) > 0
                     ? 'bg-red-50 border-red-300'
                     : 'bg-green-50 border-green-300'
                 }`}>
-                  <div className="flex-1">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Outstanding Debt (₦)
-                    </label>
-                    <input
-                      type="number"
-                      name="debt"
-                      value={formData.debt || 0}
-                      onChange={handleChange}
-                      className="w-48 px-4 py-2 border-2 border-gray-200 rounded-lg text-base focus:border-[#E30613] outline-none bg-white"
-                      min="0"
-                    />
-                  </div>
-                  <div className="text-right">
-                    <span className={`text-2xl font-extrabold ${
-                      Number(formData.debt) > 0 ? 'text-red-600' : 'text-green-600'
-                    }`}>
-                      ₦{Number(formData.debt || 0).toLocaleString()}
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Outstanding Debt (₦)
+                  </label>
+                  <input
+                    type="number"
+                    name="debt"
+                    value={formData.debt || 0}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-base focus:border-[#E30613] outline-none bg-white mb-3"
+                    min="0"
+                  />
+                  <div className={`flex items-center gap-2 text-sm font-bold ${
+                    Number(formData.debt) > 0 ? 'text-red-600' : 'text-green-600'
+                  }`}>
+                    <span>{Number(formData.debt) > 0 ? '⚠' : '✓'}</span>
+                    <span>
+                      {Number(formData.debt) > 0
+                        ? `₦${Number(formData.debt).toLocaleString()} outstanding`
+                        : 'No outstanding debt'}
                     </span>
-                    <p className={`text-xs font-semibold mt-0.5 ${
-                      Number(formData.debt) > 0 ? 'text-red-500' : 'text-green-500'
-                    }`}>
-                      {Number(formData.debt) > 0 ? '⚠ Outstanding balance' : '✓ No outstanding debt'}
-                    </p>
                   </div>
                 </div>
 
