@@ -12,6 +12,7 @@ import { CreateAlert, CreateNewsevent, CreateNotification } from './Pages/Create
 import { AllAlerts, AllNewsevents, AllNotifications } from './Pages/Manageinfo';
 import { AllUsers, FindUser, UserEdit, DuesStatus } from './Pages/User';
 import Firstpage from './Pages/Firstpage';
+import AdminActivityLogs from './Pages/AdminActivityLogs';
 import PrivateRoute from './Components/PrivateRoute';
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
         <Route path="/newsevents/:id" element={<CreateNewsevent />} />
         <Route path="/allnewsevents" element={<AllNewsevents />} />
         <Route path="/messages" element={<Messages />} />
+        <Route path="/admin-activity" element={<PrivateRoute><AdminActivityLogs /></PrivateRoute>} />
         <Route path="/news-events" element={<PrivateRoute><NewsEvents /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
         <Route path="/support" element={<Support />} />

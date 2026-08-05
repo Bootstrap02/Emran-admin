@@ -47,6 +47,7 @@ const navigate = useNavigate();
               <NavLink to="/users" className="block text-[#E30613] font-bold hover:underline">All Users</NavLink>
               <NavLink to="/finduser" className="block text-[#E30613] font-bold hover:underline">Find a User</NavLink>
               <NavLink to="/sortdues" className="block text-[#E30613] font-bold hover:underline">Dues Status</NavLink>
+              <NavLink to="/admin-activity" className="block text-[#E30613] font-bold hover:underline">Admin Activity Logs</NavLink>
             </div>
           </div>
 

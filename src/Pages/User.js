@@ -8,6 +8,15 @@ import * as XLSX from 'xlsx';
 import axios from 'axios';
 import ReplyEmailModal from './ReplyEmailModal';
 
+// ── Admin IDs authorized to view and edit the Account & Dues sections ───────
+// Only these admins can see and access the "Account" and "Dues" tabs
+// inside the UserEdit function. Every other admin must not see them at all.
+export const AUTHORIZED_ACCOUNT_DUES_ADMIN_IDS = [
+  '6999df66f376727075f54035',
+  '69d3b77382493542548a278a',
+  '6a3a408087e7a7380d79d4db',
+];
+
 // ── Helper: export users to Excel ───────────────────────────────────────────
 const exportToExcel = (users, filename = 'EMRAN_Users') => {
   if (!users || users.length === 0) { alert('No users to export'); return; }
@@ -317,6 +326,19 @@ export const UserEdit = () => {
   const [imageUploading, setImageUploading]   = useState(false);
   const fileInputRef = React.useRef(null);
 
+  // ── Admin authorization check (runs on page load) ──────────────────────────
+  // Grabs the logged-in admin's ID from localStorage so we can identify who
+  // has the right to view/edit the Account & Dues sections and who doesn't.
+const currentAdmin = JSON.parse(localStorage.getItem('adminData') || '{}');
+  // Pull the admin ID from adminData only, covering the possible field names
+  // it could be stored under (_id, id, userId, adminId).
+  const adminIdCandidates = [currentAdmin?._id, currentAdmin?.id, currentAdmin?.userId, currentAdmin?.adminId]
+    .map(v => (typeof v === 'string' ? v.trim() : ''))
+    .filter(Boolean);
+  const isAccountDuesAuthorized = adminIdCandidates.some(candidateId =>
+    AUTHORIZED_ACCOUNT_DUES_ADMIN_IDS.includes(candidateId)
+  );
+  console.log(currentAdmin)
   const [formData, setFormData] = useState({
     fullname: '', email: '', phone: '', address: '',
     role: 'prospect', position: '', staffId: '', pensionId: '',
@@ -330,6 +352,14 @@ export const UserEdit = () => {
     registration: { payment: false, amount: 0, dueDate: '' },
     dues: {},
   });
+
+// ── Guard: unauthorized admins must never land on Account/Dues tabs ───────
+  useEffect(() => {
+    if (!isAccountDuesAuthorized && (activeTab === 'account' || activeTab === 'dues')) {
+      setActiveTab('basic');
+      
+    }
+  }, [isAccountDuesAuthorized, activeTab]);
 
   const currentYear = useMemo(() => new Date().getFullYear().toString(), []);
   const availableYears = useMemo(() => {
@@ -490,8 +520,8 @@ export const UserEdit = () => {
     { key: 'basic', label: 'Personal' },
     { key: 'retirement', label: 'Retirement' },
     { key: 'family', label: 'Family' },
-    { key: 'account', label: 'Account' },
-    { key: 'dues', label: 'Dues' },
+    ...(isAccountDuesAuthorized ? [{ key: 'account', label: 'Account' }] : []),
+    ...(isAccountDuesAuthorized ? [{ key: 'dues', label: 'Dues' }] : []),
   ];
 
   return (

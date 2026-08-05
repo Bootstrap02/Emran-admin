@@ -58,8 +58,10 @@ export const CreateNotification = () => {
     setLoading(true);
 
     try {
+      const adminId = id || (JSON.parse(localStorage.getItem('userData'))?.user?._id) || (JSON.parse(localStorage.getItem('userData'))?._id);
+      const postUrl = adminId ? `${API_BASE}/mobilcreatenotifications/${adminId}` : `${API_BASE}/mobilcreatenotifications`;
       const response = await axios.post(
-        `${API_BASE}/mobilcreatenotifications/${id}`,
+        postUrl,
         { title, content },
         { headers: { 'Content-Type': 'application/json' } }
       );
@@ -155,8 +157,10 @@ export const CreateNewsevent = () => {
 
     try {
       // Step 1: Create the news/event record
+      const adminId = id || (JSON.parse(localStorage.getItem('userData'))?.user?._id) || (JSON.parse(localStorage.getItem('userData'))?._id);
+      const postUrl = adminId ? `${API_BASE}/mobilcreatenewsevents/${adminId}` : `${API_BASE}/mobilcreatenewsevents/${id}`;
       const createResponse = await axios.post(
-        `${API_BASE}/mobilcreatenewsevents/${id}`,
+        postUrl,
         { title, body },
         { headers: { 'Content-Type': 'application/json' } }
       );

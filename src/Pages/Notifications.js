@@ -22,6 +22,14 @@ const broadcastPush = async (title, message) => {
   }
 };
 
+// helper to extract admin id from localStorage
+const getAdminId = () => {
+  try {
+    const d = JSON.parse(localStorage.getItem('userData'));
+    return d?.user?._id || d?._id || d?.id || d?.userId || '';
+  } catch (e) { return ''; }
+};
+
 const Notifications = () => {
   const [items, setItems]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,9 +70,13 @@ const Notifications = () => {
         showFeedback('success', 'Notification updated successfully.');
       } else {
         // ── CREATE new notification ──
+        const adminId = getAdminId();
+        // Prefer sending admin id in URL param (backend expects POST /:id)
+        const postUrl = adminId ? `${API_BASE}/mobilcreatenotifications/${adminId}` : `${API_BASE}/mobilcreatenotifications`;
         await axios.post(
-          `${API_BASE}/mobilcreatenotifications`,
-          { title: form.title, message: form.message }
+          postUrl,
+          { title: form.title, message: form.message },
+          { headers: { 'Content-Type': 'application/json' } }
         );
         showFeedback('success', 'Notification created and push sent to all subscribers.');
       }

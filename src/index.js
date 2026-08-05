@@ -7,6 +7,27 @@ import reportWebVitals from './reportWebVitals';
 import './index.css';
 import rootReducer from './Reducers/rootReducer';
 import { GoogleOAuthProvider } from '@react-oauth/google'; // 👈 ADD THIS
+import axios from 'axios';
+
+// Global axios interceptor to attach adminId to requests (if admin is logged in)
+axios.interceptors.request.use((config) => {
+  try {
+    const admin = JSON.parse(localStorage.getItem('adminData') || 'null');
+    const adminId = admin?._id || admin?.id || null;
+    if (!adminId) return config;
+    const method = (config.method || 'get').toLowerCase();
+    if (method === 'get') {
+      config.params = { ...(config.params || {}), adminId };
+    } else {
+      // For POST/PUT/DELETE/PATCH, ensure body exists and is an object
+      if (!config.data || typeof config.data !== 'object') config.data = { adminId };
+      else config.data = { ...(config.data || {}), adminId };
+    }
+  } catch (err) {
+    // ignore
+  }
+  return config;
+}, (err) => Promise.reject(err));
 
 const store = createStore(rootReducer);
 
