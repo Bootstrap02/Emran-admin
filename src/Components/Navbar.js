@@ -202,6 +202,7 @@ const customStyles = {
             <NavLink to= ""><span>Logistics</span></NavLink>
             <NavLink to='/'><span>  Excro Payment</span></NavLink>
             <NavLink to='/'><span>  Premium Services</span></NavLink>
+            <NavLink to='/elections'><span> Elections</span></NavLink>
             </div>
             <div>
       <a onClick={loginOrOut} className='dropdown-item p-2  rounded-[10px] bg-[#FEBD69] text-8px '>

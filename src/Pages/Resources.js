@@ -59,16 +59,13 @@ const Resources = () => {
             ))}
           </div>
 
-          <div className="mt-16 text-center">
+<div className="mt-16 text-center">
             <p className="text-lg text-gray-600 mb-6">
               Can't find what you're looking for?
             </p>
-            <NavLink
-              to="/support"
-              className="inline-block bg-[#001F5B] hover:bg-[#001F3F] text-white font-bold py-4 px-10 rounded-xl transition"
-            >
-              Contact Support
-            </NavLink>
+            <p className="text-[#001F5B] font-semibold">
+              Please email the EMRAN Secretariat for assistance.
+            </p>
           </div>
         </div>
       </div>

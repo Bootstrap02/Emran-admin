@@ -43,11 +43,12 @@ const navigate = useNavigate();
             <FiUsers className="text-6xl text-[#E30613] mb-6" />
             <h2 className="text-3xl font-bold text-[#001F5B] mb-4">User Management</h2>
             <p className="text-gray-600 mb-6">Approve signups, search users, manage dues, edit profiles, delete accounts.</p>
-            <div className="space-y-3">
-              <NavLink to="/users" className="block text-[#E30613] font-bold hover:underline">All Users</NavLink>
-              <NavLink to="/finduser" className="block text-[#E30613] font-bold hover:underline">Find a User</NavLink>
-              <NavLink to="/sortdues" className="block text-[#E30613] font-bold hover:underline">Dues Status</NavLink>
-              <NavLink to="/admin-activity" className="block text-[#E30613] font-bold hover:underline">Admin Activity Logs</NavLink>
+<div className="flex flex-wrap gap-x-6 gap-y-3">
+              <NavLink to="/users" className="text-[#E30613] font-bold hover:underline">All Users</NavLink>
+              <NavLink to="/finduser" className="text-[#E30613] font-bold hover:underline">Find a User</NavLink>
+              <NavLink to="/sortdues" className="text-[#E30613] font-bold hover:underline">Dues Status</NavLink>
+              <NavLink to="/admin-activity" className="text-[#E30613] font-bold hover:underline">Admin Activity Logs</NavLink>
+              <NavLink to="/birthdays" className="text-[#E30613] font-bold hover:underline">Birthdays</NavLink>
             </div>
           </div>
 

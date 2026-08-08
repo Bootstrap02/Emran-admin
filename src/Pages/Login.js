@@ -17,8 +17,7 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError(''); // Clear error on input change
   };
-  useEffect(() => {
-    const SUPER_ADMIN_ID = '6a3a408087e7a7380d79d4db';
+useEffect(() => {
     const fetchData = async () => {
       try {
         const notifRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenotifications');
@@ -29,10 +28,8 @@ const Login = () => {
         localStorage.setItem('alerts', JSON.stringify(alertRes.data.alerts));
         const adminRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/admin');
         localStorage.setItem('admin', JSON.stringify(adminRes.data.admin));
-        const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/getusers');
+const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/getusers');
         localStorage.setItem('users', JSON.stringify(usersRes.data.users));
-        const messageRes = await axios.get(`https://campusbuy-backend-nkmx.onrender.com/mobilcreatemessages/${SUPER_ADMIN_ID}`);
-        localStorage.setItem('messages', JSON.stringify(messageRes.data.messages));
       } catch (err) {
         console.error('Failed to fetch data:', err);
         // Use toast instead of alert in production

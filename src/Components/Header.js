@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   FiMenu, FiX, FiBell, FiLogOut,
-  FiAlertCircle, FiMessageSquare, FiCheckCircle, 
+  FiAlertCircle, FiCheckCircle, 
   FiPlusCircle, FiList, FiRefreshCw
 } from 'react-icons/fi';
 import axios from 'axios';
@@ -25,8 +25,7 @@ const AdminHeader = () => {
   }, []);
 
   // Centralized Refresh Sync Engine
-  const handleManualRefresh = async () => {
-    const SUPER_ADMIN_ID = '6a3a408087e7a7380d79d4db';
+const handleManualRefresh = async () => {
     setIsRefreshing(true);
     try {
       const notifRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenotifications');
@@ -41,11 +40,8 @@ const AdminHeader = () => {
       const adminRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/admin');
       localStorage.setItem('admin', JSON.stringify(adminRes.data.admin || {}));
       
-      const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/getusers');
+const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/getusers');
       localStorage.setItem('users', JSON.stringify(usersRes.data.users || []));
-      
-      const messageRes = await axios.get(`https://campusbuy-backend-nkmx.onrender.com/mobilcreatemessages/${SUPER_ADMIN_ID}`);
-      localStorage.setItem('messages', JSON.stringify(messageRes.data.messages || []));
       
       console.log('✅ Local cache synchronized successfully.');
     } catch (err) {
@@ -81,18 +77,11 @@ const AdminHeader = () => {
         { label: 'Pending Signups', path: '/pending', icon: <FiList /> },
       ]
     },
-    {
+{
       title: 'Dues Payment',
       icon: <FiAlertCircle className="text-xl" />,
       items: [
         { label: 'Confirm Payment', path: '/confirmpayment', icon: <FiPlusCircle /> },
-      ]
-    },
-    {
-      title: 'Messages',
-      icon: <FiMessageSquare className="text-xl" />,
-      items: [
-        { label: 'Send/Reply Messages', path: '/support', icon: <FiMessageSquare /> },
       ]
     },
     {
