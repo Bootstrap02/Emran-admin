@@ -1,7 +1,7 @@
 // src/Components/NewsEventTemplateSelector.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiChevronDown, FiX } from 'react-icons/fi';
+// import { FiChevronDown, FiX } from 'react-icons/fi';
 
 const NewsEventTemplateSelector = ({ onTemplateSelect, selectedTemplate, adminId }) => {
   const [templates, setTemplates] = useState([]);
