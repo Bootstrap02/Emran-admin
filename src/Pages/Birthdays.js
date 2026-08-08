@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-const API_BASE = 'https://campusbuy-backend-nkmx.onrender.com';
+const API_BASE = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin';
 
 const getAdminIdFromStorage = () => {
   try {
