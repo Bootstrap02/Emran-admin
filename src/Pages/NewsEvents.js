@@ -39,7 +39,7 @@ const TEMPLATES = [
     ],
     generateBody: (f) =>
       `EMRAN warmly celebrates ${f.celebrantName}${f.age ? `, who is clocking ${f.age} years` : ''}, on this joyous occasion.\n\n` +
-      `On behalf of the entire EMRAN family, we wish you many more years of good health, happiness, and God\'s blessings.\n\n` +
+`On behalf of the entire EMRAN family, we wish you many more years of good health, happiness, and God's blessings.\n\n` +
       `${f.venue ? `The celebration holds at ${f.venue}.` : ''}\n\n` +
       `${f.extraNote || ''}`.trim(),
     generateTitle: (f) =>
@@ -63,7 +63,7 @@ const TEMPLATES = [
     ],
     generateBody: (f) =>
       `EMRAN is delighted to celebrate with ${f.memberName} on the wedding of ${f.relation ? `their ${f.relation}` : 'their child'}, ${f.celebrantNames}.\n\n` +
-      `We join our esteemed member in rejoicing on this beautiful occasion and pray for a marriage full of love, joy, and God\'s blessing.\n\n` +
+`We join our esteemed member in rejoicing on this beautiful occasion and pray for a marriage full of love, joy, and God's blessing.\n\n` +
       `${f.venue ? `The ceremony holds at ${f.venue}.` : ''}\n\n` +
       `${f.extraNote || ''}`.trim(),
     generateTitle: (f) => `Wedding Celebration - ${f.celebrantNames}`,
