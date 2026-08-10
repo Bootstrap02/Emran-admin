@@ -225,100 +225,203 @@ const ImageUploader = ({ images, onChange }) => {
 
 // Template modal
 const TemplateModal = ({ template, adminId, onClose, onSuccess }) => {
-  const [fields,  setFields]  = useState({});
-  const [images,  setImages]  = useState([]);
+  const [fields, setFields] = useState({});
+  const [selectedImages, setSelectedImages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState('');
+  const [error, setError] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const set = (name, value) => setFields(prev => ({ ...prev, [name]: value }));
+
+  const handleImageChange = (e, setFieldValue) => {
+    const files = Array.from(e.target.files);
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'svg'];
+    const validFiles = [];
+    let hasError = false;
+
+    files.forEach((file) => {
+      const fileExtension = file.name.split('.').pop().toLowerCase();
+      if (allowedExtensions.includes(fileExtension)) {
+        validFiles.push(file);
+      } else {
+        hasError = true;
+        setErrorMessage('Unsupported file format. Only jpg, jpeg, png, and svg are allowed.');
+      }
+    });
+
+    if (!hasError) {
+      setSelectedImages((prevImages) => [...prevImages, ...validFiles]);
+      if (setFieldValue) {
+        setFieldValue("images", validFiles);
+      }
+      setErrorMessage('');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setErrorMessage('');
+    
+    // Validate required fields
     for (const f of template.fields) {
       if (f.required && !String(fields[f.name] || '').trim()) {
-        setError(`${f.label} is required`); return;
+        setError(`${f.label} is required`);
+        return;
       }
     }
+
     setLoading(true);
     try {
-      const title    = template.genTitle(fields);
-      const body     = template.genBody(fields);
+      const title = template.genTitle(fields);
+      const body = template.genBody(fields);
       const category = template.id;
 
+      // Create the news event
       const res = await axios.post(`${API_BASE}/mobilcreatenewsevents/${adminId}`, {
         title, body, category,
         eventDate: fields.date || fields.burialDate || null,
       });
+      
       const newsEventId = res.data.newsEvent?._id || res.data._id;
 
-      // Upload images one by one to preserve order
-      for (const img of images) {
-        const fd = new FormData();
-        fd.append('images', img);
-        await axios.put(`${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`, fd);
+      // Upload images one by one preserving order (like Productimages)
+      if (selectedImages && selectedImages.length > 0) {
+        for (const img of selectedImages) {
+          const formData = new FormData();
+          formData.append('images', img);
+          
+          // Log the upload for debugging
+          console.log('Uploading image:', img.name);
+          
+          await axios.put(`${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`, formData);
+        }
       }
 
-      await broadcastPush(`📢 ${title}`, body.substring(0, 100) + (body.length > 100 ? '...' : ''), '/newsevents');
+      // Send push notification
+      await broadcastPush(
+        `📢 ${title}`,
+        body.substring(0, 100) + (body.length > 100 ? '...' : ''),
+        '/newsevents'
+      );
+      
       onSuccess(`"${title}" published successfully!`);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to publish. Please try again.');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputCls = "w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-[#E30613] focus:outline-none transition";
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4 py-6 overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl my-auto"
-        style={{ borderTop: `6px solid ${template.color}` }}>
-        <div className="flex items-center justify-between px-8 pt-7 pb-4">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{template.emoji}</span>
-            <div>
-              <h2 className="text-2xl font-extrabold text-[#001F5B]">{template.label}</h2>
-              <p className="text-sm text-gray-500">{template.desc}</p>
-            </div>
-          </div>
-          <button onClick={onClose} disabled={loading}
-            className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 text-xl font-bold transition">
-            x
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="sticky top-0 bg-white z-10 px-6 py-4 border-b flex justify-between items-center">
+          <h2 className="text-xl font-bold text-gray-800">Publish: {template.label}</h2>
+          <button 
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-2xl"
+          >
+            ×
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-5">
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2">
-              <FiXCircle /> {error}
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+              {error}
             </div>
           )}
-          {template.fields.map(f => (
+
+          {errorMessage && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+              {errorMessage}
+            </div>
+          )}
+
+          {template.fields.map((f) => (
             <div key={f.name}>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                {f.label} {f.required && <span className="text-red-500">*</span>}
+                {f.label}
+                {f.required && <span className="text-red-500 ml-1">*</span>}
               </label>
-              {f.type === 'textarea'
-                ? <textarea value={fields[f.name] || ''} onChange={e => set(f.name, e.target.value)}
-                    placeholder={f.placeholder || ''} rows={f.rows || 4}
-                    className={inputCls + ' resize-none'} />
-                : <input type={f.type || 'text'} value={fields[f.name] || ''}
-                    onChange={e => set(f.name, e.target.value)}
-                    placeholder={f.placeholder || ''}
-                    className={inputCls} />
-              }
+              
+              {f.type === 'textarea' ? (
+                <textarea
+                  value={fields[f.name] || ''}
+                  onChange={(e) => set(f.name, e.target.value)}
+                  placeholder={f.placeholder || ''}
+                  className={inputCls}
+                  rows={f.rows || 4}
+                />
+              ) : f.type === 'date' ? (
+                <input
+                  type="date"
+                  value={fields[f.name] || ''}
+                  onChange={(e) => set(f.name, e.target.value)}
+                  className={inputCls}
+                />
+              ) : f.type === 'file' ? (
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => handleImageChange(e)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-[#E30613] focus:outline-none transition"
+                  />
+                  {selectedImages.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedImages.map((img, index) => (
+                        <span key={index} className="bg-gray-100 px-3 py-1 rounded-full text-xs text-gray-600">
+                          📷 {img.name.substring(0, 20)}{img.name.length > 20 ? '...' : ''}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    {selectedImages.length} image{selectedImages.length !== 1 ? 's' : ''} selected. 
+                    Supported formats: JPG, JPEG, PNG, SVG
+                  </p>
+                </div>
+              ) : (
+                <input
+                  type={f.type || 'text'}
+                  value={fields[f.name] || ''}
+                  onChange={(e) => set(f.name, e.target.value)}
+                  placeholder={f.placeholder || ''}
+                  className={inputCls}
+                />
+              )}
             </div>
           ))}
-          <ImageUploader images={images} onChange={setImages} />
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} disabled={loading}
-              className="flex-1 py-3.5 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 transition text-sm">
+
+          <div className="flex gap-3 pt-4 border-t">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition"
+            >
               Cancel
             </button>
-            <button type="submit" disabled={loading}
-              className="flex-1 py-3.5 rounded-xl text-white font-bold text-sm transition flex items-center justify-center gap-2"
-              style={{ background: loading ? '#9CA3AF' : template.color }}>
-              {loading
-                ? <><FiLoader className="animate-spin" /> Publishing...</>
-                : `Publish ${template.label}`}
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-4 py-3 bg-[#E30613] text-white rounded-xl font-medium hover:bg-[#c00510] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Publishing...
+                </span>
+              ) : (
+                `Publish ${template.label}`
+              )}
             </button>
           </div>
         </form>
@@ -326,6 +429,8 @@ const TemplateModal = ({ template, adminId, onClose, onSuccess }) => {
     </div>
   );
 };
+
+export default TemplateModal;
         
         
 
