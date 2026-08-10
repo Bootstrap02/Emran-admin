@@ -182,46 +182,7 @@ const TEMPLATES = [
 ];
 
 // Multi-image uploader (max 4)
-const ImageUploader = ({ images, onChange }) => {
-  const ref = useRef(null);
-  const handleFiles = (e) => {
-    const files = Array.from(e.target.files);
-    const remaining = 4 - images.length;
-    onChange([...images, ...files.slice(0, remaining)]);
-    e.target.value = '';
-  };
-  const remove = (idx) => onChange(images.filter((_, i) => i !== idx));
-  return (
-    <div>
-      <label className="block text-lg font-medium text-gray-700 mb-2">
-        Photos <span className="text-sm text-gray-400 font-normal">(up to 4 — JPG, PNG, SVG)</span>
-      </label>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-        {images.map((img, idx) => (
-          <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border-2 border-gray-200 bg-gray-50">
-            <img src={URL.createObjectURL(img)} alt="" className="w-full h-full object-cover" />
-            <button type="button" onClick={() => remove(idx)}
-              className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-red-700">
-              x
-            </button>
-          </div>
-        ))}
-        {images.length < 4 && (
-          <button type="button" onClick={() => ref.current?.click()}
-            className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-[#E30613] hover:text-[#E30613] transition bg-gray-50">
-            <span className="text-2xl mb-1">+</span>
-            <span className="text-xs">Add Photo</span>
-          </button>
-        )}
-      </div>
-      <input ref={ref} type="file" multiple accept="image/jpeg,image/jpg,image/png,image/svg+xml"
-        onChange={handleFiles} className="hidden" />
-      {images.length > 0 && (
-        <p className="text-xs text-gray-400">{images.length}/4 image{images.length !== 1 ? 's' : ''} selected</p>
-      )}
-    </div>
-  );
-};
+
 
 // Template modal
 const TemplateModal = ({ template, adminId, onClose, onSuccess }) => {
