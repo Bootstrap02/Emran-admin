@@ -3,7 +3,7 @@
 //           CreateAlert, CreateElection (with positions + candidates inline),
 //           ResultsPage, AdminManageCandidates
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect  } from 'react';
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { FiLoader, FiXCircle, FiCheckCircle, FiBell, FiPlus, FiTrash2, FiUser } from 'react-icons/fi';
