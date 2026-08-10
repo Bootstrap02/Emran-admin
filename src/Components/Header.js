@@ -92,8 +92,10 @@ const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mo
         { label: 'View Notifications', path: '/allnotifications', icon: <FiList /> },
         { label: 'Create Alert', path: `/alerts/${admin?._id}`, icon: <FiPlusCircle /> },
         { label: 'View Alerts', path: '/allalerts', icon: <FiList /> },
-        { label: 'Create Newsevent', path: `/newsevents/${admin?._id}`, icon: <FiPlusCircle /> },
+{ label: 'Create Newsevent', path: `/newsevents/${admin?._id}`, icon: <FiPlusCircle /> },
         { label: 'View Newsevents', path: '/allnewsevents', icon: <FiList /> },
+        { label: 'Create Election', path: `/elections/create/${admin?._id}`, icon: <FiPlusCircle /> },
+        { label: 'Manage Elections', path: '/elections/manage', icon: <FiList /> },
       ]
     },
   ];

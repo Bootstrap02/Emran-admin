@@ -6,7 +6,7 @@ import { PendingSignups, } from './Pages/Pending';
 import {ConfirmedPayments, AllPayments} from './Pages/Payment';
 import NewsEvents from './Pages/NewsEvents';
 import Notifications from './Pages/Notifications';
-import { CreateAlert, CreateNewsevent, CreateNotification } from './Pages/Createinfo';
+import { CreateAlert, CreateNewsevent, CreateNotification, CreateElection, AdminManageCandidates } from './Pages/Createinfo';
 import { AllAlerts, AllNewsevents, AllNotifications } from './Pages/Manageinfo';
 import { AllUsers, FindUser, UserEdit, DuesStatus } from './Pages/User';
 import Firstpage from './Pages/Firstpage';
@@ -38,7 +38,9 @@ function App() {
         <Route path="/birthdays" element={<PrivateRoute><Birthdays /></PrivateRoute>} />
         <Route path="/news-events" element={<PrivateRoute><NewsEvents /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
-        <Route path="/elections" element={<PrivateRoute><ElectionAdmin /></PrivateRoute>} />
+<Route path="/elections" element={<PrivateRoute><ElectionAdmin /></PrivateRoute>} />
+        <Route path="/elections/create/:id" element={<PrivateRoute><CreateElection /></PrivateRoute>} />
+        <Route path="/elections/manage" element={<PrivateRoute><AdminManageCandidates /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

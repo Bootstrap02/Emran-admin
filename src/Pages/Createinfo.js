@@ -9,7 +9,7 @@ import { useParams } from "react-router-dom";
 import { FiLoader, FiXCircle, FiCheckCircle, FiBell, FiPlus, FiTrash2, FiUser } from 'react-icons/fi';
 
 const API_BASE  = 'https://campusbuy-backend-nkmx.onrender.com';
-const ELECT_API = `${API_BASE}/mobilcreateelection`;
+const ELECT_API = `${API_BASE}/mobilcreateelections`;
 
 // ── Push broadcast ───────────────────────────────────────────────────────────
 const broadcastPush = async (title, body, url = '/dashboard') => {
@@ -256,7 +256,7 @@ const TemplateModal = ({ template, adminId, onClose, onSuccess }) => {
       for (const img of images) {
         const fd = new FormData();
         fd.append('images', img);
-        await axios.put(`${API_BASE}/mobilcreatenewsevents/image/${newsEventId}`, fd);
+        await axios.put(`${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`, fd);
       }
 
       await broadcastPush(`📢 ${title}`, body.substring(0, 100) + (body.length > 100 ? '...' : ''), '/newsevents');
