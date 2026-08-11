@@ -238,7 +238,7 @@ const TemplateModal = ({ template, adminId, onClose, onSuccess }) => {
         for (const img of images) {
           const fd = new FormData();
           fd.append('images', img);
-          await axios.put(`${API_BASE}/mobilcreatenewsevents/image/${newsEventId}`, fd);
+          await axios.put(`${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`, fd);
         }
       }
 
