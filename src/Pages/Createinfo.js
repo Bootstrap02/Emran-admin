@@ -259,6 +259,8 @@ const TemplateModal = ({ template, adminId, onClose, onSuccess }) => {
       if (images.length > 0 && newsEventId) {
         const fd = new FormData();
         images.forEach(img => fd.append('images', img));
+        for (const [key, value] of formData.entries()) {
+        }
         await axios.put(
           `${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`,
           fd,
