@@ -1,4 +1,3 @@
-
 // src/pages/CreateContent.jsx
 // Contains: CreateNotification, CreateNewsevent (with templates + multi-image),
 //           CreateAlert, CreateElection (with positions + candidates inline),
@@ -253,11 +252,18 @@ const TemplateModal = ({ template, adminId, onClose, onSuccess }) => {
       });
       const newsEventId = res.data.newsEvent?._id || res.data._id;
 
-      // Upload images one by one to preserve order
-      for (const img of images) {
+      // Send ALL images together in ONE FormData request
+      // This matches exactly how the Campusify product frontend sends images
+      // The backend middleware (productResizePhotos) expects all files in one request
+      // and attaches the processed results to req.processedImages
+      if (images.length > 0 && newsEventId) {
         const fd = new FormData();
-        fd.append('images', img);
-        await axios.put(`${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`, fd);
+        images.forEach(img => fd.append('images', img));
+        await axios.put(
+          `${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`,
+          fd,
+          { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
       }
 
       await broadcastPush(`📢 ${title}`, body.substring(0, 100) + (body.length > 100 ? '...' : ''), '/newsevents');
