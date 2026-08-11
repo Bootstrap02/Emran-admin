@@ -260,11 +260,10 @@ const TemplateModal = ({ template, adminId, onClose, onSuccess }) => {
         const fd = new FormData();
         images.forEach(img => fd.append('images', img));
         
-        await axios.put(
-          `${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`,
-          fd,
-          
-        );
+        
+        await axios.put(`${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`, fd, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+});
       }
 
       await broadcastPush(`📢 ${title}`, body.substring(0, 100) + (body.length > 100 ? '...' : ''), '/newsevents');
