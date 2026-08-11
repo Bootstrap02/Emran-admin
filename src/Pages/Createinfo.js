@@ -262,7 +262,7 @@ const TemplateModal = ({ template, adminId, onClose, onSuccess }) => {
         await axios.put(
           `${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`,
           fd,
-          { headers: { 'Content-Type': 'multipart/form-data' } }
+          
         );
       }
 
