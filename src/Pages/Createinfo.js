@@ -257,14 +257,12 @@ const TemplateModal = ({ template, adminId, onClose, onSuccess }) => {
       // The backend middleware (productResizePhotos) expects all files in one request
       // and attaches the processed results to req.processedImages
       if (images.length > 0 && newsEventId) {
-        const fd = new FormData();
-        images.forEach(img => fd.append('images', img));
-        
-        
-        await axios.put(`${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`, fd, {
-  headers: { 'Content-Type': 'multipart/form-data' }
-});
-      }
+  const fd = new FormData();
+  images.forEach(img => fd.append('images', img));
+
+  await axios.put(`${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`, fd);
+  // no headers config — let axios set Content-Type + boundary itself
+}
 
       await broadcastPush(`📢 ${title}`, body.substring(0, 100) + (body.length > 100 ? '...' : ''), '/newsevents');
       onSuccess(`"${title}" published successfully!`);
