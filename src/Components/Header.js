@@ -32,6 +32,11 @@ const handleManualRefresh = async () => {
       localStorage.setItem('notifications', JSON.stringify(notifRes.data.notifications || []));
       
       const eventsRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenewsevents');
+      // FIX: the controller returns the list under the key `newsEvents`
+      // (plural), not `newsEvent`. Reading the wrong key meant this always
+      // fell back to `[]` and wiped the news/events cache to empty on
+      // every single page load, since this header mounts on every admin
+      // page and runs this refresh automatically.
       localStorage.setItem('newsevents', JSON.stringify(eventsRes.data.newsEvents || []));
       
       const alertRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatealert');
@@ -265,3 +270,4 @@ const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mo
 };
 
 export default AdminHeader;
+
