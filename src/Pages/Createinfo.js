@@ -56,7 +56,7 @@ export const CreateNotification = () => {
       // Correct version: read the actual created notification's id off the
       // response, and only append it to the URL if it's actually present.
       const createdId = response.data?.notification?._id || response.data?._id || '';
-      const pushUrl = createdId ? `/dashboard/${createdId}` : '/dashboard';
+      const pushUrl = createdId ? `/notifications/${createdId}` : '/dashboard';
 
       await broadcastPush(title, content, pushUrl);
       showFeedback('success', response.data.message || 'Notification created and push sent!');
