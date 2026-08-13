@@ -341,6 +341,12 @@ const ElectionCard = ({ election: initElection, onDeleted }) => {
             </div>
           )}
 
+          {election.status === 'upcoming' && (
+            <p className="mt-4 text-xs text-blue-600 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              This will switch to Active automatically the next time this page is opened after the start time — or tap "Start Election" below to open voting right now.
+            </p>
+          )}
+
           <div className="mt-5 space-y-5">
             {election.positions.map((pos, pi) => (
               <div key={pi}>
@@ -381,6 +387,13 @@ const ElectionCard = ({ election: initElection, onDeleted }) => {
           </div>
 
           <div className="flex flex-wrap gap-2 sm:gap-3 mt-6 pt-4 border-t border-gray-100">
+            {election.status === 'upcoming' && (
+              <button disabled={!!loading}
+                onClick={() => action('Start Election now', () => axios.put(`${API}/${election._id}/start`))}
+                className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition disabled:opacity-60">
+                {loading === 'Start Election now' ? <FiLoader className="animate-spin" /> : <FiCheckCircle />} Start Election
+              </button>
+            )}
             {election.status === 'active' && (
               <button disabled={!!loading}
                 onClick={() => action('End Election', () => axios.put(`${API}/${election._id}/end`))}
