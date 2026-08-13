@@ -41,7 +41,7 @@ export const CreateNotification = () => {
     setLoading(true);
     try {
       const response = await axios.post(`${API_BASE}/mobilcreatenotifications/${id}`, { title, content });
-      await broadcastPush(title, content, '/dashboard');
+      await broadcastPush(title, content, `/dashboard/response.data.${_id} `);
       showFeedback('success', response.data.message || 'Notification created and push sent!');
       setTitle(''); setContent('');
     } catch (err) {
