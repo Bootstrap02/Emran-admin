@@ -12,9 +12,9 @@ const API_BASE  = 'https://campusbuy-backend-nkmx.onrender.com';
 const ELECT_API = `${API_BASE}/mobilcreateelection`;
 
 // ── Push broadcast ───────────────────────────────────────────────────────────
-const broadcastPush = async (title, body, url = '/dashboard') => {
+const broadcastPush = async (title, body, url = '/dashboard', image = null) => {
   try {
-    await axios.post(`${API_BASE}/mobilcreatenotifications/push/send-all`, { title, body, url });
+    await axios.post(`${API_BASE}/mobilcreatenotifications/push/send-all`, { title, body, url, image });
   } catch (err) {
     console.error('Push failed:', err.message);
   }
@@ -277,15 +277,29 @@ const TemplateModal = ({ template, adminId, onClose, onSuccess }) => {
       // This matches exactly how the Campusify product frontend sends images
       // The backend middleware (productResizePhotos) expects all files in one request
       // and attaches the processed results to req.processedImages
+      //
+      // FIX: capture the uploaded image URLs from the response so the first
+      // one can be passed to the push notification as its image/icon.
+      let firstImageUrl = null;
       if (images.length > 0 && newsEventId) {
-  const fd = new FormData();
-  images.forEach(img => fd.append('images', img));
+        const fd = new FormData();
+        images.forEach(img => fd.append('images', img));
 
-  await axios.put(`${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`, fd);
-  // no headers config — let axios set Content-Type + boundary itself
-}
+        const imgRes = await axios.put(`${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`, fd);
+        // no headers config — let axios set Content-Type + boundary itself
 
-      await broadcastPush(`📢 ${title}`, body.substring(0, 100) + (body.length > 100 ? '...' : ''), '/newsevents');
+        const uploadedUrls = imgRes.data?.images || imgRes.data?.newsEvent?.images || [];
+        firstImageUrl = uploadedUrls[0] || null;
+      }
+
+      // FIX: pass firstImageUrl through as the 4th argument so it actually
+      // reaches the push payload's `image` field.
+      await broadcastPush(
+        `📢 ${title}`,
+        body.substring(0, 100) + (body.length > 100 ? '...' : ''),
+        '/newsevents',
+        firstImageUrl
+      );
       onSuccess(`"${title}" published successfully!`);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to publish. Please try again.');
