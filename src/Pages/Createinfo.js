@@ -765,6 +765,7 @@ export const ResultsPage = () => {
 // ════════════════════════════════════════════════════════════════════════════
 //  ADMIN MANAGE ELECTIONS (replaces AdminManageCandidates)
 // ════════════════════════════════════════════════════════════════════════════
+
 export const AdminManageCandidates = () => {
   const [elections, setElections] = useState([]);
   const [loading,   setLoading]   = useState(true);
@@ -799,16 +800,16 @@ export const AdminManageCandidates = () => {
   if (loading) return <div className="text-center py-12 text-[#001F5B] animate-pulse">Loading elections...</div>;
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <h1 className="text-3xl font-bold text-[#001F5B] mb-8">Manage Elections</h1>
+    <div className="max-w-5xl mx-auto p-3 sm:p-6">
+      <h1 className="text-2xl sm:text-3xl font-bold text-[#001F5B] mb-6 sm:mb-8">Manage Elections</h1>
       {elections.length === 0 && (
-        <div className="bg-white rounded-2xl shadow p-12 text-center">
+        <div className="bg-white rounded-2xl shadow p-8 sm:p-12 text-center">
           <div className="text-5xl mb-3">🗳️</div>
           <p className="text-gray-500 text-lg">No elections yet. Go to Create Info to create an election.</p>
         </div>
       )}
       {elections.map(el => (
-        <div key={el._id} className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <div key={el._id} className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-6">
           {msg[el._id] && (
             <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2 ${
               msg[el._id].type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
@@ -817,9 +818,9 @@ export const AdminManageCandidates = () => {
             </div>
           )}
           <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
-            <div>
-              <h2 className="text-xl font-bold text-[#001F5B]">{el.title}</h2>
-              <p className="text-sm text-gray-400 mt-1">
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-bold text-[#001F5B] truncate">{el.title}</h2>
+              <p className="text-xs sm:text-sm text-gray-400 mt-1">
                 Start: {new Date(el.startDate).toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}
                 &nbsp;· {el.voters?.length || 0} voters · {el.positions.length} position{el.positions.length !== 1 ? 's' : ''}
               </p>
@@ -843,12 +844,12 @@ export const AdminManageCandidates = () => {
                     const total = pos.candidates.reduce((s, x) => s + (x.voteCount || 0), 0);
                     const pct   = total > 0 ? Math.round((c.voteCount / total) * 100) : 0;
                     return (
-                      <div key={ci} className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-gray-700 w-40 truncate">{c.fullName}</span>
+                      <div key={ci} className="flex items-center gap-2 sm:gap-3">
+                        <span className="text-sm font-medium text-gray-700 w-28 sm:w-40 truncate">{c.fullName}</span>
                         <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                           <div className="h-full rounded-full" style={{ width: `${pct}%`, background: ci === 0 ? '#E30613' : '#001F5B' }} />
                         </div>
-                        <span className="text-xs text-gray-500 w-20 text-right">{c.voteCount || 0} votes ({pct}%)</span>
+                        <span className="text-xs text-gray-500 w-16 sm:w-20 text-right flex-shrink-0">{c.voteCount || 0} ({pct}%)</span>
                       </div>
                     );
                   })
@@ -858,18 +859,18 @@ export const AdminManageCandidates = () => {
           ))}
 
           {/* Action buttons */}
-          <div className="flex flex-wrap gap-3 mt-5 pt-4 border-t border-gray-100">
+          <div className="flex flex-wrap gap-2 sm:gap-3 mt-5 pt-4 border-t border-gray-100">
             {el.status === 'active' && (
               <button
                 onClick={() => doAction('End Election', el._id, () => axios.put(`${ELECT_API}/${el._id}/end`))}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gray-700 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition">
+                className="flex items-center gap-2 px-4 py-2.5 bg-gray-700 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition">
                 End Election
               </button>
             )}
             {el.status === 'ended' && (
               <button
                 onClick={() => doAction('Declare Results', el._id, () => axios.put(`${ELECT_API}/${el._id}/declare-results`))}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#E30613] text-white rounded-xl text-sm font-semibold hover:bg-[#c20511] transition">
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#E30613] text-white rounded-xl text-sm font-semibold hover:bg-[#c20511] transition">
                 Declare Results
               </button>
             )}
@@ -878,10 +879,18 @@ export const AdminManageCandidates = () => {
                 {el.winner}
               </div>
             )}
+            {(el.status === 'ended' || el.status === 'results_declared') && (
+              <button
+                onClick={() => doAction('Nullify and reset this election (clears all votes, keeps positions/candidates)', el._id,
+                  () => axios.put(`${ELECT_API}/${el._id}/nullify`))}
+                className="flex items-center gap-2 px-4 py-2.5 border-2 border-amber-400 text-amber-700 bg-amber-50 rounded-xl text-sm font-semibold hover:bg-amber-100 transition">
+                Nullify / Reset
+              </button>
+            )}
             <button
               onClick={() => doAction('Delete this election permanently', el._id,
                 () => axios.delete(`${ELECT_API}/${el._id}`).then(() => load()))}
-              className="ml-auto flex items-center gap-2 px-4 py-2.5 border border-red-200 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-50 transition">
+              className="sm:ml-auto flex items-center gap-2 px-4 py-2.5 border border-red-200 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-50 transition">
               <FiTrash2 /> Delete
             </button>
           </div>
