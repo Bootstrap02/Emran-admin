@@ -32,7 +32,7 @@ const handleManualRefresh = async () => {
       localStorage.setItem('notifications', JSON.stringify(notifRes.data.notifications || []));
       
       const eventsRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenewsevents');
-      localStorage.setItem('newsevents', JSON.stringify(eventsRes.data.newsEvent || []));
+      localStorage.setItem('newsevents', JSON.stringify(eventsRes.data.newsEvents || []));
       
       const alertRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatealert');
       localStorage.setItem('alerts', JSON.stringify(alertRes.data.alerts || []));
