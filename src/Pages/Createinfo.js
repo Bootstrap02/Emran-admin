@@ -23,6 +23,9 @@ const broadcastPush = async (title, body, url = '/dashboard') => {
 // ════════════════════════════════════════════════════════════════════════════
 //  CREATE NOTIFICATION
 // ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+//  CREATE NOTIFICATION — fixed version
+// ════════════════════════════════════════════════════════════════════════════
 export const CreateNotification = () => {
   const { id } = useParams();
   const [title,    setTitle]    = useState('');
@@ -41,7 +44,21 @@ export const CreateNotification = () => {
     setLoading(true);
     try {
       const response = await axios.post(`${API_BASE}/mobilcreatenotifications/${id}`, { title, content });
-      await broadcastPush(title, content, `/dashboard/response.data.${_id} `);
+
+      // FIX: the old code was `` `/dashboard/response.data.${_id} ` `` — this
+      // never worked. "response.data." was literal text (not real property
+      // access), `_id` referenced a variable that doesn't exist in this
+      // scope, and there was a stray trailing space. The resulting string
+      // was literally "/dashboard/response.data.undefined ", not a real
+      // route — so the push notification's click-through link never went
+      // anywhere useful.
+      //
+      // Correct version: read the actual created notification's id off the
+      // response, and only append it to the URL if it's actually present.
+      const createdId = response.data?.notification?._id || response.data?._id || '';
+      const pushUrl = createdId ? `/dashboard/${createdId}` : '/dashboard';
+
+      await broadcastPush(title, content, pushUrl);
       showFeedback('success', response.data.message || 'Notification created and push sent!');
       setTitle(''); setContent('');
     } catch (err) {
@@ -86,6 +103,10 @@ export const CreateNotification = () => {
     </div>
   );
 };
+
+
+
+
 
 // ════════════════════════════════════════════════════════════════════════════
 //  CREATE NEWS/EVENT — Template-based with up to 4 images
