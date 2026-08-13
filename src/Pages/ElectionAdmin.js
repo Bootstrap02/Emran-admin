@@ -92,10 +92,24 @@ const CreateElectionForm = ({ adminId, onCreated }) => {
     setCandidateField(pi, ci, 'userId', '');
   };
 
+  // The member's profile photo can be stored a few different ways depending
+  // on how/when it was uploaded — check all of them so we don't miss it.
+  const getProfilePhoto = (u) => {
+    if (!u) return '';
+    if (Array.isArray(u.image) && u.image.length > 0) {
+      const first = u.image[0];
+      return typeof first === 'string' ? first : (first?.url || first?.secure_url || '');
+    }
+    if (typeof u.image === 'string') return u.image;
+    return '';
+  };
+
   const selectSuggestion = (pi, ci, u) => {
     const key = `${pi}_${ci}`;
     setCandidateField(pi, ci, 'fullName', u.fullname);
     setCandidateField(pi, ci, 'userId',   u._id);
+    const photo = getProfilePhoto(u);
+    if (photo) setCandidateField(pi, ci, 'photo', photo);
     setUserSearch(prev => ({ ...prev, [key]: u.fullname }));
     setOpenDropdown(null);
   };
@@ -220,9 +234,12 @@ const CreateElectionForm = ({ adminId, onCreated }) => {
                                     onMouseDown={(e) => e.preventDefault()}
                                     onClick={() => selectSuggestion(pi, ci, u)}
                                     className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-sm border-b border-gray-50 last:border-0">
-                                    <div className="w-8 h-8 rounded-full bg-[#001F5B]/10 flex items-center justify-center text-xs font-bold text-[#001F5B] flex-shrink-0">
-                                      {u.fullname?.charAt(0)}
-                                    </div>
+                                    {getProfilePhoto(u)
+                                      ? <img src={getProfilePhoto(u)} alt={u.fullname} className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-gray-200" />
+                                      : <div className="w-8 h-8 rounded-full bg-[#001F5B]/10 flex items-center justify-center text-xs font-bold text-[#001F5B] flex-shrink-0">
+                                          {u.fullname?.charAt(0)}
+                                        </div>
+                                    }
                                     <div className="min-w-0">
                                       <p className="font-semibold text-gray-800 truncate">{u.fullname}</p>
                                       <p className="text-gray-400 text-xs truncate">{u.email}</p>
@@ -241,10 +258,15 @@ const CreateElectionForm = ({ adminId, onCreated }) => {
                           <p className="text-xs text-green-600 font-medium mb-2">✓ Linked to EMRAN member</p>
                         )}
                         <div className="grid grid-cols-1 gap-2">
-                          <input value={c.photo}
-                            onChange={e => setCandidateField(pi, ci, 'photo', e.target.value)}
-                            placeholder="Photo URL (optional)"
-                            className="px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-[#E30613] focus:outline-none" />
+                          <div className="flex items-center gap-2">
+                            {c.photo && (
+                              <img src={c.photo} alt="" className="w-9 h-9 rounded-full object-cover border border-gray-200 flex-shrink-0" />
+                            )}
+                            <input value={c.photo}
+                              onChange={e => setCandidateField(pi, ci, 'photo', e.target.value)}
+                              placeholder={c.userId ? "Photo auto-filled from profile — edit if needed" : "Photo URL (optional)"}
+                              className="flex-1 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-[#E30613] focus:outline-none" />
+                          </div>
                           <input value={c.manifesto}
                             onChange={e => setCandidateField(pi, ci, 'manifesto', e.target.value)}
                             placeholder="Brief manifesto (optional)"
