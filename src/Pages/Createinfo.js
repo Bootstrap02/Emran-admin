@@ -786,6 +786,7 @@ export const ResultsPage = () => {
 //  ADMIN MANAGE ELECTIONS (replaces AdminManageCandidates)
 // ════════════════════════════════════════════════════════════════════════════
 
+
 export const AdminManageCandidates = () => {
   const [elections, setElections] = useState([]);
   const [loading,   setLoading]   = useState(true);
@@ -853,6 +854,12 @@ export const AdminManageCandidates = () => {
             }`}>{el.status.replace('_', ' ').toUpperCase()}</span>
           </div>
 
+          {el.status === 'upcoming' && (
+            <p className="text-xs text-blue-600 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-3">
+              This will switch to Active automatically the next time anyone opens this page after the start time — or tap "Start Election" below to open voting right now.
+            </p>
+          )}
+
           {/* Live vote counts per position */}
           {el.positions.map((pos, pi) => (
             <div key={pi} className="mb-3">
@@ -880,6 +887,13 @@ export const AdminManageCandidates = () => {
 
           {/* Action buttons */}
           <div className="flex flex-wrap gap-2 sm:gap-3 mt-5 pt-4 border-t border-gray-100">
+            {el.status === 'upcoming' && (
+              <button
+                onClick={() => doAction('Start Election now', el._id, () => axios.put(`${ELECT_API}/${el._id}/start`))}
+                className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition">
+                Start Election
+              </button>
+            )}
             {el.status === 'active' && (
               <button
                 onClick={() => doAction('End Election', el._id, () => axios.put(`${ELECT_API}/${el._id}/end`))}
