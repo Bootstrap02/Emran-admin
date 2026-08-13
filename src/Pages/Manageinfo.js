@@ -1,6 +1,6 @@
 // src/pages/admin/AllNotifications.jsx
 import React, { useState, useEffect } from 'react';
-import { FiX, FiEdit, FiTrash2 } from 'react-icons/fi';
+import { FiX, FiEdit, FiTrash2, FiLoader} from 'react-icons/fi';
 import axios from "axios";
 
 
