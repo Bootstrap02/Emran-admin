@@ -171,34 +171,43 @@ export const AllNotifications = () => {
   );
 };
 
-// src/pages/admin/AllNewsevents.jsx
-//
-// FIXES applied to make edit/delete actually work:
-// 1. This page previously ONLY read from localStorage.getItem('newsevents')
-//    and never called the API. If that cache was empty or missing (e.g. you
-//    opened this page directly, or cleared your browser data), `allNewsevents`
-//    was `null`, and `newsevents.length` on the next render threw an error —
-//    the whole page effectively broke silently. Now it fetches directly from
-//    GET /mobilcreatenewsevents on load, so it's self-sufficient.
-// 2. The image-replace call used the wrong endpoint
-//    (`/mobilcreatenewsevents/image/:id`) — the working, already-fixed route
-//    from your earlier image-upload fix is `/mobilcreatenewseventsimage/:id`.
-//    That mismatch meant any edit that included a new photo silently 404'd.
-// 3. The update handler read `updateRes.data.updatedNewsEvent`, but the
-//    controller actually returns the updated doc under the key `newsEvent`.
-//    That mismatch meant edits appeared to "succeed" (no error thrown) but
-//    the on-screen data never actually refreshed with your changes.
-// 4. localStorage was being re-saved using the OLD state value right after
-//    calling setState (setState is async, so the write happened before the
-//    update applied) — meaning the cache drifted out of sync with reality
-//    after every edit/delete. Fixed by computing the new array first, then
-//    using that same array for both setState and the cache write.
 
+      // src/pages/admin/AllNewsevents.jsx
+//
+// UPDATE: brought the edit modal up to parity with the Create form. The
+// backend model supports `category` (enum), `eventDate`, and up to 4
+// `images` — but the edit modal only ever exposed title/body/one photo.
+// Now it exposes all of them.
+//
+// One real backend constraint to be aware of: `uploadNewseventImage`
+// REPLACES the entire images array with whatever new files are sent — it
+// doesn't append to the existing gallery. So "Replace Images" here uploads
+// up to 4 new files and swaps out the whole gallery, rather than adding to
+// it. The UI makes that explicit so it's not a surprise.
 
 
 const API_BASE = 'https://campusbuy-backend-nkmx.onrender.com';
 const NEWS_API = `${API_BASE}/mobilcreatenewsevents`;
 const IMAGE_API = `${API_BASE}/mobilcreatenewseventsimage`;
+const MAX_IMAGES = 4;
+
+const CATEGORY_OPTIONS = [
+  { value: 'general',  label: 'General' },
+  { value: 'birthday', label: 'Birthday' },
+  { value: 'wedding',  label: 'Wedding' },
+  { value: 'funeral',  label: 'Funeral' },
+  { value: 'obituary', label: 'Obituary' },
+  { value: 'event',    label: 'Event' },
+  { value: 'custom',   label: 'Custom' },
+];
+
+// Normalize eventDate (ISO string from backend) to yyyy-mm-dd for <input type="date">
+const toDateInputValue = (isoString) => {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0, 10);
+};
 
 export const AllNewsevents = () => {
   const [newsevents, setNewsevents] = useState([]);
@@ -207,7 +216,7 @@ export const AllNewsevents = () => {
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [editImage, setEditImage] = useState(null);
+  const [editImages, setEditImages] = useState([]); // new File objects, up to 4
   const [saving, setSaving] = useState(false);
 
   const adminData = JSON.parse(localStorage.getItem('admin') || localStorage.getItem('adminData') || '{}');
@@ -251,12 +260,21 @@ export const AllNewsevents = () => {
 
   // Open edit modal
   const openEditModal = (item) => {
-    setEditItem({ ...item });
-    setEditImage(null);
+    setEditItem({
+      ...item,
+      category: item.category || 'general',
+      eventDate: toDateInputValue(item.eventDate),
+    });
+    setEditImages([]);
     setEditModalOpen(true);
   };
 
-  // Handle update (title/body first, then a new image if one was selected)
+  const handleImagePick = (e) => {
+    const files = Array.from(e.target.files || []).slice(0, MAX_IMAGES);
+    setEditImages(files);
+  };
+
+  // Handle update (title/body/category/eventDate first, then new images if any)
   const handleUpdate = async (e) => {
     e.preventDefault();
 
@@ -268,30 +286,26 @@ export const AllNewsevents = () => {
     setSaving(true);
 
     try {
-      // Step 1: Update title & body
+      // Step 1: Update title, body, category, eventDate
       const updateRes = await axios.put(`${NEWS_API}/${editItem._id}`, {
         title: editItem.title,
         body: editItem.body,
+        category: editItem.category,
+        eventDate: editItem.eventDate || null,
         adminId,
       });
-      // FIX: the controller returns the updated doc under `newsEvent`, not
-      // `updatedNewsEvent` — reading the wrong key meant this always fell
-      // back to the stale local copy instead of the real saved version.
       let finalDoc = updateRes.data.newsEvent || editItem;
 
-      // Step 2: Upload new image if one was picked — FIX: correct endpoint
-      if (editImage) {
+      // Step 2: Replace images if new ones were picked
+      if (editImages.length > 0) {
         const imageFormData = new FormData();
-        imageFormData.append('images', editImage);
+        editImages.forEach(file => imageFormData.append('images', file));
         imageFormData.append('adminId', adminId || '');
 
         const imgRes = await axios.put(`${IMAGE_API}/${editItem._id}`, imageFormData);
         if (imgRes.data.newsEvent) finalDoc = imgRes.data.newsEvent;
       }
 
-      // FIX: build the new array first, then use that SAME array for both
-      // setState and the localStorage write, instead of writing the stale
-      // pre-update state (which was the actual cause of the cache drifting).
       const updatedList = newsevents.map(n => (n._id === finalDoc._id ? finalDoc : n));
       setNewsevents(updatedList);
       localStorage.setItem('newsevents', JSON.stringify(updatedList));
@@ -336,39 +350,61 @@ export const AllNewsevents = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {newsevents.map(event => (
-              <div
-                key={event._id}
-                className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition border border-gray-200"
-              >
-                {event.image && (
-                  <img
-                    src={event.image}
-                    alt={event.title}
-                    className="w-full h-48 object-cover rounded-xl mb-4"
-                  />
-                )}
-                <h2 className="text-2xl font-bold text-[#001F5B] mb-4">{event.title}</h2>
-                <p className="text-gray-700 mb-8 line-clamp-4">{event.body}</p>
+            {newsevents.map(event => {
+              const gallery = Array.isArray(event.images) && event.images.length > 0
+                ? event.images
+                : (event.image ? [event.image] : []);
+              return (
+                <div
+                  key={event._id}
+                  className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition border border-gray-200"
+                >
+                  {gallery.length > 0 && (
+                    <div className={`grid gap-2 mb-4 ${gallery.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                      {gallery.slice(0, 4).map((img, i) => (
+                        <img
+                          key={i}
+                          src={img}
+                          alt={event.title}
+                          className={`w-full object-cover rounded-xl ${gallery.length === 1 ? 'h-48' : 'h-24'}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 mb-3">
+                    {event.category && (
+                      <span className="text-xs font-bold uppercase tracking-wide bg-[#001F5B]/10 text-[#001F5B] px-3 py-1 rounded-full">
+                        {event.category}
+                      </span>
+                    )}
+                    {event.eventDate && (
+                      <span className="text-xs text-gray-400">
+                        {new Date(event.eventDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="text-2xl font-bold text-[#001F5B] mb-4">{event.title}</h2>
+                  <p className="text-gray-700 mb-8 line-clamp-4">{event.body}</p>
 
-                <div className="flex gap-6 justify-end">
-                  <button
-                    onClick={() => openEditModal(event)}
-                    className="text-blue-600 hover:text-blue-800 transition transform hover:scale-110"
-                    title="Edit"
-                  >
-                    <FiEdit className="text-3xl" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(event._id)}
-                    className="text-red-600 hover:text-red-800 transition transform hover:scale-110"
-                    title="Delete"
-                  >
-                    <FiTrash2 className="text-3xl" />
-                  </button>
+                  <div className="flex gap-6 justify-end">
+                    <button
+                      onClick={() => openEditModal(event)}
+                      className="text-blue-600 hover:text-blue-800 transition transform hover:scale-110"
+                      title="Edit"
+                    >
+                      <FiEdit className="text-3xl" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(event._id)}
+                      className="text-red-600 hover:text-red-800 transition transform hover:scale-110"
+                      title="Delete"
+                    >
+                      <FiTrash2 className="text-3xl" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -387,6 +423,21 @@ export const AllNewsevents = () => {
               </div>
 
               <form onSubmit={handleUpdate} className="space-y-6">
+                {/* Category */}
+                <div>
+                  <label className="block text-lg font-medium text-gray-700 mb-2">Category</label>
+                  <select
+                    value={editItem.category}
+                    onChange={(e) => setEditItem({ ...editItem, category: e.target.value })}
+                    className="w-full px-6 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-[#E30613] focus:ring-2 focus:ring-[#E30613]/30 transition bg-white"
+                  >
+                    {CATEGORY_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Title */}
                 <div>
                   <label className="block text-lg font-medium text-gray-700 mb-2">Title</label>
                   <input
@@ -399,6 +450,7 @@ export const AllNewsevents = () => {
                   />
                 </div>
 
+                {/* Body */}
                 <div>
                   <label className="block text-lg font-medium text-gray-700 mb-2">Body / Description</label>
                   <textarea
@@ -411,26 +463,56 @@ export const AllNewsevents = () => {
                   />
                 </div>
 
+                {/* Event Date */}
                 <div>
-                  <label className="block text-lg font-medium text-gray-700 mb-2">
-                    Replace Image (optional)
+                  <label className="block text-lg font-medium text-gray-700 mb-2">Event Date (optional)</label>
+                  <input
+                    type="date"
+                    value={editItem.eventDate}
+                    onChange={(e) => setEditItem({ ...editItem, eventDate: e.target.value })}
+                    className="w-full px-6 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-[#E30613] focus:ring-2 focus:ring-[#E30613]/30 transition"
+                  />
+                </div>
+
+                {/* Images */}
+                <div>
+                  <label className="block text-lg font-medium text-gray-700 mb-2 flex items-center gap-2">
+                    <FiImage /> Images (up to {MAX_IMAGES})
                   </label>
-                  {editItem.image && (
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-600">Current image:</p>
-                      <img
-                        src={editItem.image}
-                        alt="Current"
-                        className="w-48 h-48 object-cover rounded-xl border border-gray-200 mt-2"
-                      />
-                    </div>
-                  )}
+
+                  {(() => {
+                    const currentGallery = Array.isArray(editItem.images) && editItem.images.length > 0
+                      ? editItem.images
+                      : (editItem.image ? [editItem.image] : []);
+                    return currentGallery.length > 0 ? (
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-600 mb-2">Current images:</p>
+                        <div className="grid grid-cols-4 gap-2">
+                          {currentGallery.map((img, i) => (
+                            <img key={i} src={img} alt="" className="w-full h-20 object-cover rounded-lg border border-gray-200" />
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-400 mb-3">No images uploaded yet.</p>
+                    );
+                  })()}
+
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => setEditImage(e.target.files[0])}
+                    multiple
+                    onChange={handleImagePick}
                     className="w-full px-4 py-4 border border-gray-300 rounded-xl file:mr-6 file:py-3 file:px-8 file:rounded-full file:border-0 file:bg-[#E30613]/10 file:text-[#E30613] file:font-medium hover:file:bg-[#E30613]/20 transition"
                   />
+                  <p className="text-xs text-gray-400 mt-2">
+                    Selecting new images replaces the entire gallery above — it doesn't add to it. Leave empty to keep the current images.
+                  </p>
+                  {editImages.length > 0 && (
+                    <p className="text-xs text-green-600 font-medium mt-1">
+                      {editImages.length} new image{editImages.length > 1 ? 's' : ''} selected — will replace current gallery on save.
+                    </p>
+                  )}
                 </div>
 
                 <button
@@ -451,6 +533,10 @@ export const AllNewsevents = () => {
   );
 };
 
+
+                  
+
+    
 
 
 
