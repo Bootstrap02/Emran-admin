@@ -8,15 +8,9 @@ const Birthdays = () => {
   const [list, setList] = useState([]);
   const [totalChecked, setTotalChecked] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
 
-  // FIX: this page was calling /checkbirthdays, which is a SEND-EMAILS
-  // action endpoint (it emails today's celebrants and tomorrow's reminder
-  // on every call), not a listing endpoint — and its response shape
-  // (`today`/`tomorrow` arrays of send-results) never matched what this
-  // page expected anyway, so it always showed "No birthdays found"
-  // regardless of real data. Now pointed at the new read-only /listbirthdays
-  // endpoint, which has no side effects and returns the full roster.
   const fetchBirthdays = useCallback(async () => {
     setError('');
     setLoading(true);
@@ -37,6 +31,19 @@ const Birthdays = () => {
   useEffect(() => {
     fetchBirthdays();
   }, [fetchBirthdays]);
+
+  const handleSendBirthdayEmails = async () => {
+    setSending(true);
+    try {
+      await axios.get(`${API_BASE}/checkbirthdays`);
+      alert('Birthday emails sent successfully!');
+    } catch (err) {
+      console.error('Failed to send birthday emails:', err);
+      alert(err.response?.data?.message || 'Failed to send birthday emails.');
+    } finally {
+      setSending(false);
+    }
+  };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
@@ -73,13 +80,26 @@ const Birthdays = () => {
             Members with a date of birth on file, sorted by who's next.
           </p>
         </div>
-        <button
-          onClick={fetchBirthdays}
-          disabled={loading}
-          className="bg-[#E30613] text-white px-6 py-3 rounded-lg font-bold hover:bg-[#c50511] disabled:opacity-50"
-        >
-          {loading ? 'Refreshing...' : 'Refresh'}
-        </button>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleSendBirthdayEmails}
+            disabled={sending}
+            className="flex items-center gap-2 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 text-white px-5 py-3 rounded-lg font-bold shadow-md hover:shadow-lg hover:opacity-95 transition-all duration-200 active:scale-95 disabled:opacity-50"
+          >
+            <span>🎉</span>
+            {sending ? 'Sending Emails...' : 'Send Birthday Emails'}
+          </button>
+
+          <button
+            onClick={fetchBirthdays}
+            disabled={loading}
+            className="bg-[#E30613] text-white px-6 py-3 rounded-lg font-bold hover:bg-[#c50511] transition-colors disabled:opacity-50"
+          >
+            {loading ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {totalChecked !== null && (
@@ -100,37 +120,53 @@ const Birthdays = () => {
         <div className="grid gap-4">
           {list.map((item, idx) => {
             const days = daysUntil(item.nextBirthday);
+            const age = getAge(item.dateOfBirth);
             return (
-              <div key={item?._id || idx} className="bg-white p-4 rounded-lg shadow flex flex-col sm:flex-row justify-between gap-4">
+              <div
+                key={item?._id || idx}
+                className="bg-white p-4 rounded-lg shadow flex flex-col sm:flex-row justify-between gap-4"
+              >
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-xl font-semibold text-[#001F5B]">{item.fullname}</h3>
+                    <h3 className="text-xl font-semibold text-[#001F5B]">
+                      {item.fullname}
+                    </h3>
                     {item.isToday && (
-                      <span className="text-xs font-bold bg-pink-100 text-pink-700 px-2 py-1 rounded-full">🎂 TODAY</span>
+                      <span className="text-xs font-bold bg-pink-100 text-pink-700 px-2 py-1 rounded-full">
+                        🎂 TODAY
+                      </span>
                     )}
                     {!item.isToday && days === 1 && (
-                      <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Tomorrow</span>
+                      <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                        Tomorrow
+                      </span>
                     )}
                   </div>
                   <div className="text-sm text-gray-500 mt-2">
-                    <span className="font-medium text-gray-700">Date of Birth:</span> {formatDate(item.dateOfBirth)}
+                    <span className="font-medium text-gray-700">Date of Birth:</span>{' '}
+                    {formatDate(item.dateOfBirth)}
                   </div>
                   <div className="text-sm text-gray-500">
-                    <span className="font-medium text-gray-700">Turning:</span> {getAge(item.dateOfBirth) + 1}
+                    <span className="font-medium text-gray-700">Turning:</span>{' '}
+                    {age !== null ? age + 1 : '-'}
                   </div>
                   {!item.isToday && (
                     <div className="text-sm text-gray-500">
-                      <span className="font-medium text-gray-700">Next birthday in:</span> {days} day{days !== 1 ? 's' : ''}
+                      <span className="font-medium text-gray-700">Next birthday in:</span>{' '}
+                      {days} day{days !== 1 ? 's' : ''}
                     </div>
                   )}
                 </div>
                 <div className="w-40 text-right">
                   <div className="text-sm text-gray-500">Email</div>
-                  <div className="font-medium text-gray-800 text-sm break-all">{item.email || '-'}</div>
+                  <div className="font-medium text-gray-800 text-sm break-all">
+                    {item.email || '-'}
+                  </div>
                 </div>
               </div>
             );
           })}
+
           {!loading && list.length === 0 && !error && (
             <div className="bg-white p-10 rounded-2xl shadow text-center text-gray-500">
               No birthdays to display.
