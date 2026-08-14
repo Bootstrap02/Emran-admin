@@ -1,41 +1,31 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const API_BASE = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin';
 
-const getAdminIdFromStorage = () => {
-  try {
-    const d = JSON.parse(localStorage.getItem('userData')) || JSON.parse(localStorage.getItem('adminData'));
-    return d?.user?._id || d?._id || d?.id || d?.userId || '';
-  } catch (e) { return ''; }
-};
-
 const Birthdays = () => {
   const [list, setList] = useState([]);
+  const [totalChecked, setTotalChecked] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const extractList = (data) => {
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data?.birthdays)) return data.birthdays;
-    if (Array.isArray(data?.members)) return data.members;
-    if (Array.isArray(data?.users)) return data.users;
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data?.results)) return data.results;
-    return [];
-  };
-
-const fetchBirthdays = useCallback(async () => {
+  // FIX: this page was calling /checkbirthdays, which is a SEND-EMAILS
+  // action endpoint (it emails today's celebrants and tomorrow's reminder
+  // on every call), not a listing endpoint — and its response shape
+  // (`today`/`tomorrow` arrays of send-results) never matched what this
+  // page expected anyway, so it always showed "No birthdays found"
+  // regardless of real data. Now pointed at the new read-only /listbirthdays
+  // endpoint, which has no side effects and returns the full roster.
+  const fetchBirthdays = useCallback(async () => {
     setError('');
     setLoading(true);
     try {
-      const adminId = getAdminIdFromStorage();
-      const params = {};
-      if (adminId) params.adminId = adminId;
-      const res = await axios.get(`${API_BASE}/checkbirthdays`, { params });
-      const items = extractList(res?.data);
+      const res = await axios.get(`${API_BASE}/listbirthdays`);
+      const items = res?.data?.birthdays || [];
       setList(items);
-      if (items.length === 0) setError('No birthdays found.');
+      setTotalChecked(res?.data?.totalUsersChecked ?? null);
+      if (items.length === 0) setError('No members have a date of birth on file yet.');
     } catch (err) {
       console.error('Failed to fetch birthdays:', err);
       setError(err.response?.data?.message || 'Failed to fetch birthdays.');
@@ -66,19 +56,22 @@ const fetchBirthdays = useCallback(async () => {
     return age;
   };
 
-  const getName = (item) =>
-    item?.fullname || item?.fullName || item?.name || item?.username ||
-    (item?.firstname || '') + ' ' + (item?.lastname || '') || item?._id || '-';
-
-  const getDob = (item) =>
-    item?.dob || item?.DOB || item?.dateOfBirth || item?.birthday || item?.birthDate || item?.dateOfbirth || '';
+  const daysUntil = (nextBirthdayStr) => {
+    const next = new Date(nextBirthdayStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    next.setHours(0, 0, 0, 0);
+    return Math.round((next - today) / (1000 * 60 * 60 * 24));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+      <div className="flex items-center justify-between mb-2 flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold text-[#001F5B]">Birthdays</h1>
-          <p className="text-gray-600 mt-1">Members celebrating birthdays.</p>
+          <p className="text-gray-600 mt-1">
+            Members with a date of birth on file, sorted by who's next.
+          </p>
         </div>
         <button
           onClick={fetchBirthdays}
@@ -88,6 +81,12 @@ const fetchBirthdays = useCallback(async () => {
           {loading ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
+
+      {totalChecked !== null && (
+        <p className="text-xs text-gray-400 mb-4">
+          {list.length} of {totalChecked} total members have a date of birth on file.
+        </p>
+      )}
 
       {error && (
         <div className="mb-4 p-4 bg-red-100 text-red-800 rounded">{error}</div>
@@ -100,22 +99,34 @@ const fetchBirthdays = useCallback(async () => {
       ) : (
         <div className="grid gap-4">
           {list.map((item, idx) => {
-            const dob = getDob(item);
-            const age = getAge(dob);
+            const days = daysUntil(item.nextBirthday);
             return (
-              <div key={item?._id || item?.id || idx} className="bg-white p-4 rounded-lg shadow flex flex-col sm:flex-row justify-between gap-4">
+              <div key={item?._id || idx} className="bg-white p-4 rounded-lg shadow flex flex-col sm:flex-row justify-between gap-4">
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-[#001F5B]">{getName(item)}</h3>
-                  <div className="text-sm text-gray-500 mt-2">
-                    <span className="font-medium text-gray-700">Date of Birth:</span> {formatDate(dob)}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-xl font-semibold text-[#001F5B]">{item.fullname}</h3>
+                    {item.isToday && (
+                      <span className="text-xs font-bold bg-pink-100 text-pink-700 px-2 py-1 rounded-full">🎂 TODAY</span>
+                    )}
+                    {!item.isToday && days === 1 && (
+                      <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Tomorrow</span>
+                    )}
                   </div>
-                  {age !== null && (
-                    <div className="text-sm text-gray-500"><span className="font-medium text-gray-700">Age:</span> {age}</div>
+                  <div className="text-sm text-gray-500 mt-2">
+                    <span className="font-medium text-gray-700">Date of Birth:</span> {formatDate(item.dateOfBirth)}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    <span className="font-medium text-gray-700">Turning:</span> {getAge(item.dateOfBirth) + 1}
+                  </div>
+                  {!item.isToday && (
+                    <div className="text-sm text-gray-500">
+                      <span className="font-medium text-gray-700">Next birthday in:</span> {days} day{days !== 1 ? 's' : ''}
+                    </div>
                   )}
                 </div>
                 <div className="w-40 text-right">
-                  <div className="text-sm text-gray-500">Member ID</div>
-                  <div className="font-medium text-gray-800">{item?._id || item?.id || '-'}</div>
+                  <div className="text-sm text-gray-500">Email</div>
+                  <div className="font-medium text-gray-800 text-sm break-all">{item.email || '-'}</div>
                 </div>
               </div>
             );
