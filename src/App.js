@@ -14,6 +14,10 @@ import AdminActivityLogs from './Pages/AdminActivityLogs';
 import Birthdays from './Pages/Birthdays';
 import PrivateRoute from './Components/PrivateRoute';
 import ElectionAdmin from './Pages/ElectionAdmin';
+import RequestFunds from './Pages/RequestFunds';
+import PaymentReview from './Pages/PaymentReview';
+import TreasurerAction from './Pages/TreasurerAction';
+import PaymentLog from './Pages/PaymentLog';
 
 function App() {
   return (
@@ -41,6 +45,13 @@ function App() {
 <Route path="/elections" element={<PrivateRoute><ElectionAdmin /></PrivateRoute>} />
         <Route path="/elections/create/:id" element={<PrivateRoute><CreateElection /></PrivateRoute>} />
         <Route path="/elections/manage" element={<PrivateRoute><AdminManageCandidates /></PrivateRoute>} />
+        <Route path="/requestfunds" element={<PrivateRoute><RequestFunds /></PrivateRoute>} />
+        <Route path="/paymentreview" element={<PrivateRoute><PaymentReview /></PrivateRoute>} />
+        <Route path="/treasureraction" element={<PrivateRoute><TreasurerAction /></PrivateRoute>} />
+        <Route path="/paymentlog" element={<PrivateRoute><PaymentLog /></PrivateRoute>} />
+
+
+  
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
