@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiDownload, FiRefreshCw, FiCheckCircle, FiXCircle, FiClock, FiAlertCircle } from 'react-icons/fi';
+import { FiDownload, FiRefreshCw, FiCheckCircle, FiXCircle, FiClock, } from 'react-icons/fi';
 
 const API = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreatepayment';
 
