@@ -93,7 +93,7 @@ const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mo
       title: 'Finances',
       icon: <FiAlertCircle className="text-xl" />,
       items: [
-        { label: 'Request Funds, path: '/requestfunds', icon: <FiPlusCircle /> },
+        { label: 'Request Funds', path: '/requestfunds', icon: <FiPlusCircle /> },
       ]
     },
     {
