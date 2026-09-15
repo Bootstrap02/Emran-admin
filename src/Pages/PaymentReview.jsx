@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { FiCheckCircle, FiXCircle, FiLoader, FiAlertTriangle } from 'react-icons/fi';
+import { FiCheckCircle, FiXCircle, FiLoader,  } from 'react-icons/fi';
 
 const API = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreatepayment';
 
