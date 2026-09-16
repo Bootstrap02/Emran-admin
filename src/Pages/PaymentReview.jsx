@@ -63,6 +63,7 @@ const PaymentReview = () => {
       await axios.post(`${API}/${id}/request-president-otp`, { adminId: admin._id });
       setOtpSent(true);
       setShowOtp(true);
+      console.log(otpSent);
     } catch (err) {
       setFeedback({ type: 'error', text: err.response?.data?.message || 'Failed to send OTP. Please try again.' });
     } finally { setSendingOtp(false); }
