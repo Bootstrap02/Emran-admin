@@ -1,9 +1,10 @@
-// src/App.jsx
+
+// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Pages/Login';
-import { PendingSignups, } from './Pages/Pending';
-import {ConfirmedPayments, AllPayments} from './Pages/Payment';
+import { PendingSignups } from './Pages/Pending';
+import { ConfirmedPayments, AllPayments } from './Pages/Payment';
 import NewsEvents from './Pages/NewsEvents';
 import Notifications from './Pages/Notifications';
 import { CreateAlert, CreateNewsevent, CreateNotification, CreateElection, AdminManageCandidates } from './Pages/Createinfo';
@@ -18,6 +19,7 @@ import RequestFunds from './Pages/RequestFunds';
 import PaymentReview from './Pages/PaymentReview';
 import TreasurerAction from './Pages/TreasurerAction';
 import PaymentLog from './Pages/PaymentLog';
+import MilestoneBirthdays from './Pages/MilestoneBirthdays';
 
 function App() {
   return (
@@ -38,20 +40,27 @@ function App() {
         <Route path="/allnotifications" element={<AllNotifications />} />
         <Route path="/newsevents/:id" element={<CreateNewsevent />} />
         <Route path="/allnewsevents" element={<AllNewsevents />} />
-<Route path="/admin-activity" element={<PrivateRoute><AdminActivityLogs /></PrivateRoute>} />
+        <Route path="/admin-activity" element={<PrivateRoute><AdminActivityLogs /></PrivateRoute>} />
         <Route path="/birthdays" element={<PrivateRoute><Birthdays /></PrivateRoute>} />
         <Route path="/news-events" element={<PrivateRoute><NewsEvents /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
-<Route path="/elections" element={<PrivateRoute><ElectionAdmin /></PrivateRoute>} />
+        <Route path="/elections" element={<PrivateRoute><ElectionAdmin /></PrivateRoute>} />
         <Route path="/elections/create/:id" element={<PrivateRoute><CreateElection /></PrivateRoute>} />
         <Route path="/elections/manage" element={<PrivateRoute><AdminManageCandidates /></PrivateRoute>} />
+
+        {/* ── Finance routes ─────────────────────────────────────────────── */}
         <Route path="/requestfunds" element={<PrivateRoute><RequestFunds /></PrivateRoute>} />
-        <Route path="/paymentreview" element={<PrivateRoute><PaymentReview /></PrivateRoute>} />
-        <Route path="/treasureraction" element={<PrivateRoute><TreasurerAction /></PrivateRoute>} />
+        <Route path="/milestonesbirthdays" element={<PrivateRoute><MilestoneBirthdays /></PrivateRoute>} />
         <Route path="/paymentlog" element={<PrivateRoute><PaymentLog /></PrivateRoute>} />
 
+        {/* Payment review routes — :id is the PaymentRequest MongoDB _id */}
+        <Route path="/payments/review/:id" element={<PrivateRoute><PaymentReview /></PrivateRoute>} />
+        <Route path="/payments/secretary-review/:id" element={<PrivateRoute><PaymentReview /></PrivateRoute>} />
+        <Route path="/treasureraction/:id" element={<PrivateRoute><TreasurerAction /></PrivateRoute>} />
 
-  
+        {/* Legacy routes without :id — kept for backward compat */}
+        <Route path="/paymentreview" element={<PrivateRoute><PaymentReview /></PrivateRoute>} />
+
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
