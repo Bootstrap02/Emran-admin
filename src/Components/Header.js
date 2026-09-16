@@ -1,10 +1,12 @@
-// components/AdminHeader.jsx
+
+// components/Header.js (Admin Header)
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
+import {
   FiMenu, FiX, FiBell, FiLogOut,
-  FiAlertCircle, FiCheckCircle, 
-  FiPlusCircle, FiList, FiRefreshCw
+  FiAlertCircle, FiCheckCircle,
+  FiPlusCircle, FiList, FiRefreshCw,
+  FiDollarSign, FiPhone, FiGift,
 } from 'react-icons/fi';
 import axios from 'axios';
 import exxonLogo from '../assets/exxonmobil-logo-white.jpg';
@@ -14,9 +16,11 @@ const AdminHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   const navigate = useNavigate();
-  const admin = JSON.parse(localStorage.getItem('admin') || '{}');
+
+  // FIX: use 'adminData' key — same key used by Login, RequestFunds, and all other pages
+  const admin = JSON.parse(localStorage.getItem('adminData') || '{}');
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -24,31 +28,26 @@ const AdminHeader = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Centralized Refresh Sync Engine
-const handleManualRefresh = async () => {
+  const handleManualRefresh = async () => {
     setIsRefreshing(true);
     try {
       const notifRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenotifications');
       localStorage.setItem('notifications', JSON.stringify(notifRes.data.notifications || []));
-      
+
       const eventsRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenewsevents');
-      // FIX: the controller returns the list under the key `newsEvents`
-      // (plural), not `newsEvent`. Reading the wrong key meant this always
-      // fell back to `[]` and wiped the news/events cache to empty on
-      // every single page load, since this header mounts on every admin
-      // page and runs this refresh automatically.
       localStorage.setItem('newsevents', JSON.stringify(eventsRes.data.newsEvents || []));
-      
+
       const alertRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatealert');
       localStorage.setItem('alerts', JSON.stringify(alertRes.data.alerts || []));
-      
+
       const adminRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/admin');
-      localStorage.setItem('admin', JSON.stringify(adminRes.data.admin || {}));
-      
-const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/getusers');
+      // FIX: store under 'adminData' so all pages read consistently
+      localStorage.setItem('adminData', JSON.stringify(adminRes.data.admin || {}));
+
+      const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/getusers');
       localStorage.setItem('users', JSON.stringify(usersRes.data.users || []));
-      
-      console.log('✅ Local cache synchronized successfully.');
+
+      console.log('Local cache synchronized successfully.');
     } catch (err) {
       console.error('Failed to fetch data:', err);
     } finally {
@@ -56,9 +55,9 @@ const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mo
     }
   };
 
-  // Run once on mounting sequence
   useEffect(() => {
     handleManualRefresh();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLogout = () => {
@@ -80,35 +79,37 @@ const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mo
       icon: <FiCheckCircle className="text-xl" />,
       items: [
         { label: 'Pending Signups', path: '/pending', icon: <FiList /> },
-      ]
+      ],
     },
-{
+    {
       title: 'Dues Payment',
       icon: <FiAlertCircle className="text-xl" />,
       items: [
         { label: 'Confirm Payment', path: '/confirmpayment', icon: <FiPlusCircle /> },
-      ]
+      ],
     },
     {
       title: 'Finances',
-      icon: <FiAlertCircle className="text-xl" />,
+      icon: <FiDollarSign className="text-xl" />,
       items: [
         { label: 'Request Funds', path: '/requestfunds', icon: <FiPlusCircle /> },
-      ]
+        { label: 'Milestone Birthdays', path: '/milestonesbirthdays', icon: <FiGift /> },
+        { label: 'Payment Log', path: '/paymentlog', icon: <FiList /> },
+      ],
     },
     {
-      title: 'Information MGt',
+      title: 'Information Mgt',
       icon: <FiBell className="text-xl" />,
       items: [
         { label: 'Create Notification', path: `/notifications/${admin?._id}`, icon: <FiPlusCircle /> },
         { label: 'View Notifications', path: '/allnotifications', icon: <FiList /> },
         { label: 'Create Alert', path: `/alerts/${admin?._id}`, icon: <FiPlusCircle /> },
         { label: 'View Alerts', path: '/allalerts', icon: <FiList /> },
-{ label: 'Create Newsevent', path: `/newsevents/${admin?._id}`, icon: <FiPlusCircle /> },
-        { label: 'View Newsevents', path: '/allnewsevents', icon: <FiList /> },
+        { label: 'Create News/Event', path: `/newsevents/${admin?._id}`, icon: <FiPlusCircle /> },
+        { label: 'View News/Events', path: '/allnewsevents', icon: <FiList /> },
         { label: 'Create Election', path: `/elections/create/${admin?._id}`, icon: <FiPlusCircle /> },
         { label: 'Manage Elections', path: '/elections/manage', icon: <FiList /> },
-      ]
+      ],
     },
   ];
 
@@ -120,8 +121,8 @@ const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mo
       }`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
-          <NavLink to="/admin" className="flex items-center gap-4 group border-radius-[50%]">
-            <img src={exxonLogo} alt="EMRAN" className="h-14  rounded-full   transition-transform group-hover:scale-110" />
+          <NavLink to="/firstpage" className="flex items-center gap-4 group">
+            <img src={exxonLogo} alt="EMRAN" className="h-14 rounded-full transition-transform group-hover:scale-110" />
             <div>
               <h1 className={`font-extrabold text-2xl ${scrolled ? 'text-[#001F5B]' : 'text-white'}`}>
                 EMRAN Admin
@@ -130,25 +131,19 @@ const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mo
             </div>
           </NavLink>
 
-          {/* Navigation Dropdowns */}
-          <nav className="hidden lg:flex items-center space-x-10">
+          {/* Nav Dropdowns */}
+          <nav className="hidden lg:flex items-center space-x-8">
             {navSections.map((section, idx) => (
               <div key={idx} className="relative group">
-                <button 
-                  className={`font-medium text-lg flex items-center gap-2 transition-colors ${
-                    scrolled ? 'text-[#001F5B]' : 'text-white'
-                  } hover:text-[#E30613]`}
-                >
+                <button className={`font-medium text-base flex items-center gap-2 transition-colors ${
+                  scrolled ? 'text-[#001F5B]' : 'text-white'
+                } hover:text-[#E30613]`}>
                   {section.icon} {section.title}
                 </button>
-
-                <div className="absolute top-full left-0 mt-0 hidden group-hover:block bg-white shadow-2xl rounded-xl min-w-[240px] py-4 border-t-4 border-[#E30613] pointer-events-auto">
+                <div className="absolute top-full left-0 mt-0 hidden group-hover:block bg-white shadow-2xl rounded-xl min-w-[240px] py-4 border-t-4 border-[#E30613] z-50">
                   {section.items.map((item, i) => (
-                    <NavLink
-                      key={i}
-                      to={item.path}
-                      className="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 transition-colors text-gray-800"
-                    >
+                    <NavLink key={i} to={item.path}
+                      className="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 transition-colors text-gray-800 text-sm">
                       {item.icon}
                       <span>{item.label}</span>
                     </NavLink>
@@ -158,18 +153,18 @@ const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mo
             ))}
           </nav>
 
-          {/* Desktop Controls (Right Aligned) */}
-          <div className="flex items-center gap-6">
-            {/* Desktop Gold Refresh Action */}
-            <button 
-              onClick={handleManualRefresh}
-              disabled={isRefreshing}
-              className="text-amber-500 hover:text-amber-400 transition-colors duration-200 disabled:opacity-50"
-              title="Refresh Global Data"
-            >
+          {/* Right controls */}
+          <div className="flex items-center gap-5">
+            <button onClick={handleManualRefresh} disabled={isRefreshing}
+              className="text-amber-500 hover:text-amber-400 transition-colors disabled:opacity-50"
+              title="Refresh Data">
               <FiRefreshCw className={`text-2xl ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
-
+            <a href="tel:+2349069412463"
+              className={`transition-colors ${scrolled ? 'text-[#001F5B]' : 'text-white'} hover:text-[#E30613]`}
+              title="Call EMRAN: +234 906 941 2463">
+              <FiPhone className="text-2xl" />
+            </a>
             <button onClick={handleLogout} className="text-orange-700 hover:text-[#E30613] transition-colors">
               <FiLogOut className="text-2xl" />
             </button>
@@ -180,20 +175,18 @@ const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mo
       {/* Mobile Header */}
       <header className="fixed top-0 left-0 right-0 bg-[#001F5B] z-50 lg:hidden shadow-lg">
         <div className="flex items-center justify-between px-5 py-4">
-          <NavLink to="/admin">
-            <img src={exxonLogo} alt="EMRAN" className="h-12" />
+          <NavLink to="/firstpage">
+            <img src={exxonLogo} alt="EMRAN" className="h-12 rounded-full" />
           </NavLink>
-          
-          <div className="flex items-center gap-5">
-            {/* Mobile Gold Refresh Action (Opposite Menu Switch) */}
-            <button 
-              onClick={handleManualRefresh}
-              disabled={isRefreshing}
-              className="text-amber-500 hover:text-amber-400 p-1 disabled:opacity-50"
-            >
+          <div className="flex items-center gap-4">
+            <a href="tel:+2349069412463" className="text-white hover:text-amber-400 transition-colors"
+              title="Call EMRAN">
+              <FiPhone className="text-2xl" />
+            </a>
+            <button onClick={handleManualRefresh} disabled={isRefreshing}
+              className="text-amber-500 hover:text-amber-400 disabled:opacity-50">
               <FiRefreshCw className={`text-2xl ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
-
             <button onClick={() => setMobileMenuOpen(true)} className="text-white text-3xl">
               <FiMenu />
             </button>
@@ -201,24 +194,15 @@ const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mo
         </div>
       </header>
 
-      {/* Mobile Menu Modal */}
+      {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-[#001F5B] z-50 pt-20 px-6 overflow-y-auto">
-          {/* Header Actions inside Drawer Modal */}
           <div className="absolute top-4 left-6 right-5 flex items-center justify-between">
-            {/* Gold Refresh nested cleanly opposite modal exit */}
-            <button 
-              onClick={handleManualRefresh}
-              disabled={isRefreshing}
-              className="text-amber-500 hover:text-amber-400 disabled:opacity-50"
-            >
+            <button onClick={handleManualRefresh} disabled={isRefreshing}
+              className="text-amber-500 hover:text-amber-400 disabled:opacity-50">
               <FiRefreshCw className={`text-2xl ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
-
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-white text-3xl"
-            >
+            <button onClick={() => setMobileMenuOpen(false)} className="text-white text-3xl">
               <FiX />
             </button>
           </div>
@@ -226,25 +210,19 @@ const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mo
           <nav className="space-y-4 mt-6">
             {navSections.map((section, idx) => (
               <div key={idx}>
-                <button 
-                  onClick={() => toggleMobileDropdown(section.title)}
-                  className="w-full text-left text-white py-4 flex items-center justify-between border-b border-gray-700"
-                >
+                <button onClick={() => toggleMobileDropdown(section.title)}
+                  className="w-full text-left text-white py-4 flex items-center justify-between border-b border-gray-700">
                   <span className="flex items-center gap-3 text-xl">
                     {section.icon} {section.title}
                   </span>
                   <span>{activeMobileDropdown === section.title ? '▲' : '▼'}</span>
                 </button>
-
                 {activeMobileDropdown === section.title && (
                   <div className="pl-8 space-y-4 py-4">
                     {section.items.map((item, i) => (
-                      <NavLink 
-                        key={i}
-                        to={item.path}
+                      <NavLink key={i} to={item.path}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="block text-white hover:text-[#E30613] text-lg"
-                      >
+                        className="block text-white hover:text-[#E30613] text-lg">
                         {item.label}
                       </NavLink>
                     ))}
@@ -253,28 +231,27 @@ const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mo
               </div>
             ))}
 
-            {/* Navigation Drawer Bottom Control Strip */}
-            <button 
-              onClick={handleHome}
-              className="w-full bg-white/10 text-white py-5 rounded-xl font-bold mt-8 text-xl border border-white/20"
-            >
-              Back
+            <a href="tel:+2349069412463"
+              className="flex items-center gap-3 text-white text-xl py-4 border-b border-gray-700">
+              <FiPhone /> +234 906 941 2463
+            </a>
+
+            <button onClick={handleHome}
+              className="w-full bg-white/10 text-white py-5 rounded-xl font-bold mt-8 text-xl border border-white/20">
+              Back to Home
             </button>
-            <button 
-              onClick={handleLogout}
-              className="w-full bg-red-600 text-white py-5 rounded-xl font-bold mt-4 text-xl hover:bg-red-700 transition"
-            >
+            <button onClick={handleLogout}
+              className="w-full bg-red-600 text-white py-5 rounded-xl font-bold mt-4 text-xl hover:bg-red-700 transition">
               Sign Out
             </button>
           </nav>
         </div>
       )}
 
-      {/* Spacer layout buffer */}
-      <div className="h-24 lg:h-28"></div>
+      {/* Spacer */}
+      <div className="h-24 lg:h-28" />
     </>
   );
 };
 
 export default AdminHeader;
-
