@@ -6,7 +6,7 @@ import {
   FiMenu, FiX, FiBell, FiLogOut,
   FiAlertCircle, FiCheckCircle,
   FiPlusCircle, FiList, FiRefreshCw,
-  FiDollarSign, FiPhone, FiGift,
+  FiDollarSign, FiGift,
 } from 'react-icons/fi';
 import axios from 'axios';
 import exxonLogo from '../assets/exxonmobil-logo-white.jpg';
