@@ -1,4 +1,3 @@
-
 // Pages/PaymentReview.jsx
 // President review page — when President clicks Approve, OTP modal pops up
 // Secretary review uses the same page via different URL path
@@ -38,7 +37,6 @@ const PaymentReview = () => {
   const [otp,         setOtp]         = useState('');
   const [otpError,    setOtpError]    = useState('');
   const [sendingOtp,  setSendingOtp]  = useState(false);
-  const [otpSent,     setOtpSent]     = useState(false);
 
   const admin = JSON.parse(localStorage.getItem('adminData') || '{}');
 
@@ -49,27 +47,22 @@ const PaymentReview = () => {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // President clicks Approve → request OTP first
+  // Both President AND Secretary click Approve → request OTP first
   const handleApproveClick = async () => {
-    if (isSecretary) {
-      // Secretary doesn't need OTP — act directly
-      handleAction('APPROVED');
-      return;
-    }
-    // President needs OTP — request it
     setSendingOtp(true);
     setOtpError('');
     try {
-      await axios.post(`${API}/${id}/request-president-otp`, { adminId: admin._id });
-      setOtpSent(true);
+      const otpEndpoint = isSecretary
+        ? `${API}/${id}/request-secretary-otp`
+        : `${API}/${id}/request-president-otp`;
+      await axios.post(otpEndpoint, { adminId: admin._id });
       setShowOtp(true);
-      console.log(otpSent);
     } catch (err) {
       setFeedback({ type: 'error', text: err.response?.data?.message || 'Failed to send OTP. Please try again.' });
     } finally { setSendingOtp(false); }
   };
 
-  // President submits OTP → then approve
+  // Both President and Secretary submit OTP to confirm approval
   const handleOtpSubmit = async () => {
     if (!otp || otp.length !== 6) { setOtpError('Please enter the 6-digit OTP.'); return; }
     setActing(true);
@@ -82,7 +75,9 @@ const PaymentReview = () => {
       setDone(true);
       setFeedback({
         type: 'success',
-        text: 'Payment request approved. Forwarded to General Secretary for cold-eye review.',
+        text: isSecretary
+          ? 'Payment validated. OTP and payment instruction sent to Treasurer.'
+          : 'Payment request approved. Forwarded to General Secretary for cold-eye review.',
       });
     } catch (err) {
       setOtpError(err.response?.data?.message || 'Invalid or expired OTP.');
@@ -153,7 +148,9 @@ const PaymentReview = () => {
               </div>
               <div>
                 <h3 className="font-extrabold text-[#001F5B] text-lg">Identity Verification</h3>
-                <p className="text-xs text-gray-500">An OTP has been sent to your registered email address</p>
+                <p className="text-xs text-gray-500">
+                  An OTP has been sent to the {isSecretary ? "General Secretary's" : "President's"} registered email address
+                </p>
               </div>
             </div>
 
@@ -292,3 +289,4 @@ const PaymentReview = () => {
 };
 
 export default PaymentReview;
+
