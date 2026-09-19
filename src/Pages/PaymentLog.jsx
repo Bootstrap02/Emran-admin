@@ -1,3 +1,4 @@
+
 // pages/admin/PaymentLog.jsx
 // Shows all payment requests + financial log with PDF download
 
@@ -75,6 +76,26 @@ const downloadPDF = (pr) => {
       EMRAN — ExxonMobil Retirees Association of Nigeria<br>
       emranannuitants@gmail.com • +234 906 941 2463 • emran.center
     </div>
+    </body></html>`);
+  win.document.close();
+  win.print();
+};
+
+// Download the UBA payment letter stored in the financial log
+const downloadPaymentLetter = (log) => {
+  if (!log.paymentLetter) {
+    alert('Payment letter not available for this transaction.');
+    return;
+  }
+  const win = window.open('', '_blank');
+  win.document.write(`
+    <html><head><title>Payment Letter - ${log.requestRef}</title>
+    <style>
+      body { margin: 40px auto; max-width: 750px; }
+      @media print { body { margin: 20px; } }
+    </style>
+    </head><body>
+    ${log.paymentLetter}
     </body></html>`);
   win.document.close();
   win.print();
@@ -246,7 +267,7 @@ const PaymentLog = () => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-[#001F5B] text-white">
-                      {['Reference','Date','Amount','Beneficiary','Bank','Purpose','Executed By','Bank Ref','Status'].map(h => (
+                      {['Reference','Date','Amount','Beneficiary','Bank','Purpose','Executed By','Bank Ref','Status','Letter'].map(h => (
                         <th key={h} className="px-4 py-3 text-left text-xs font-bold whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -266,6 +287,17 @@ const PaymentLog = () => {
                           <span className="text-xs font-bold px-2 py-1 rounded-full bg-green-100 text-green-700">
                             {log.status}
                           </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {log.paymentLetter ? (
+                            <button
+                              onClick={() => downloadPaymentLetter(log)}
+                              className="flex items-center gap-1 px-3 py-1.5 bg-[#E30613] text-white rounded-lg text-xs font-bold hover:bg-[#c20511] transition whitespace-nowrap">
+                              <FiDownload className="text-xs" /> UBA Letter
+                            </button>
+                          ) : (
+                            <span className="text-xs text-gray-300">—</span>
+                          )}
                         </td>
                       </tr>
                     ))}
