@@ -364,7 +364,7 @@ const currentAdmin = JSON.parse(localStorage.getItem('adminData') || '{}');
   const currentYear = useMemo(() => new Date().getFullYear().toString(), []);
   const availableYears = useMemo(() => {
     const start = 2022;
-    const end = new Date().getFullYear() + 2;
+    const end   = new Date().getFullYear() + 5; // dynamic — always 5 years ahead
     return Array.from({ length: end - start }, (_, i) => (start + i).toString());
   }, []);
 
@@ -1289,7 +1289,7 @@ export const DuesStatus = () => {
               <label className="block text-sm font-semibold text-gray-600 mb-1 uppercase tracking-wide">Year</label>
               <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}
                 className="px-5 py-3 border-2 border-gray-200 rounded-xl focus:border-[#E30613] outline-none text-base">
-                {['2023','2024','2025','2026','2027'].map(y => <option key={y} value={y}>{y}</option>)}
+                {Array.from({ length: new Date().getFullYear() + 5 - 2022 + 1 }, (_, i) => (2022 + i).toString()).map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
 
@@ -1388,3 +1388,4 @@ export const DuesStatus = () => {
     </div>
   );
 };
+
