@@ -26,11 +26,21 @@ const RequestFunds = () => {
 
   const set = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
+  const [financialStanding, setFinancialStanding] = useState('');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // FIX: check _id from adminData
     if (!admin || !admin._id) {
       setFeedback({ type: 'error', text: 'Admin session not found. Please log out and log in again.' });
+      return;
+    }
+    // Financial standing gate — must be Yes or Not Required to proceed
+    if (!financialStanding) {
+      setFeedback({ type: 'error', text: 'Please confirm the financial standing status before submitting.' });
+      return;
+    }
+    if (financialStanding === 'no') {
+      setFeedback({ type: 'error', text: 'Payment request cannot be submitted: the member is not in good financial standing.' });
       return;
     }
     setLoading(true);
@@ -140,8 +150,36 @@ const RequestFunds = () => {
             className={inputCls + ' resize-none'} />
         </div>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800">
-          By submitting this form, you confirm that the information provided is accurate and that this request is made in good faith on behalf of EMRAN.
+        <div className="border-t pt-5">
+          <h3 className="text-sm font-bold text-[#001F5B] uppercase tracking-wide mb-3">Financial Standing Confirmation</h3>
+          <p className="text-xs text-gray-500 mb-3">
+            You must confirm the requester's financial standing before this request can be submitted.
+            If the status is <strong>No</strong>, the request will be blocked.
+          </p>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              Is this person in good financial standing? <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={financialStanding}
+              onChange={e => { setFinancialStanding(e.target.value); setFeedback(null); }}
+              className={inputCls}>
+              <option value="">— Select —</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+              <option value="not_required">Not Required</option>
+            </select>
+          </div>
+          {financialStanding === 'no' && (
+            <div className="mt-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-xs font-medium">
+              This request cannot be submitted. The requester is not in good financial standing.
+            </div>
+          )}
+          {(financialStanding === 'yes' || financialStanding === 'not_required') && (
+            <div className="mt-3 bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-xs font-medium">
+              Financial standing confirmed — you may proceed with the request.
+            </div>
+          )}
         </div>
 
         <button type="submit" disabled={loading}
