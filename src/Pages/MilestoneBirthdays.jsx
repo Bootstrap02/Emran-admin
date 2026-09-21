@@ -1,7 +1,7 @@
+
 // Pages/MilestoneBirthdays.jsx
-// Searches for EMRAN members with milestone birthdays (60,70,80,90,100)
-// in the current Sunday-Saturday week, then submits a payment request
-// to the President for approval — same flow as RequestFunds
+// Searches for EMRAN members with milestone birthdays (70,80,90,100)
+// 60 is NOT a milestone age — removed per EMRAN President's instruction
 
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
@@ -11,7 +11,6 @@ const API      = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin';
 const PAY_API  = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreatepayment';
 
 const MILESTONE_BENEFITS = {
-  60:  { amount: 30000,  label: '₦30,000'  },
   70:  { amount: 50000,  label: '₦50,000'  },
   80:  { amount: 60000,  label: '₦60,000'  },
   90:  { amount: 80000,  label: '₦80,000'  },
@@ -157,7 +156,7 @@ const MilestoneBirthdays = () => {
           <h1 className="text-3xl font-extrabold text-[#001F5B]">Milestone Birthday Payments</h1>
         </div>
         <p className="text-gray-500 text-sm">
-          Scans for EMRAN members celebrating a milestone birthday (60, 70, 80, 90, or 100) this week.
+          Scans for EMRAN members celebrating a milestone birthday (70, 80, 90, or 100) this week.
           Results are submitted as a payment request to the President for approval.
         </p>
       </div>
@@ -172,7 +171,7 @@ const MilestoneBirthdays = () => {
         </div>
         <div className="text-right">
           <p className="text-xs text-gray-400">Milestone ages</p>
-          <p className="font-bold text-[#001F5B] text-sm">60 · 70 · 80 · 90 · 100</p>
+          <p className="font-bold text-[#001F5B] text-sm">70 · 80 · 90 · 100</p>
         </div>
       </div>
 
