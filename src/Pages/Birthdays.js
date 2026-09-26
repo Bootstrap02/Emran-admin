@@ -1,3 +1,4 @@
+
 // Pages/Birthdays.js — Admin birthday management
 // Tab 1: Original UI — birthday list table + send button (RESTORED)
 // Tab 2: 4-day milestone reminder (NEW — does not touch Tab 1)
@@ -309,4 +310,3 @@ const Birthdays = () => {
 };
 
 export default Birthdays;
-
