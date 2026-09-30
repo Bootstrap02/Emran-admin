@@ -1,15 +1,18 @@
 
+
 // Pages/Birthdays.js — Admin birthday management
 // Tab 1: Original UI — birthday list table + send button (RESTORED)
 // Tab 2: 4-day milestone reminder (NEW — does not touch Tab 1)
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const API = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin';
 const MILESTONE_AGES = [70, 80, 90, 100];
 
 const Birthdays = () => {
+  const navigate = useNavigate();
   const [tab,           setTab]           = useState('birthdays');
   // ── Tab 1 state ──────────────────────────────────────────────────────────
   const [birthdays,     setBirthdays]     = useState([]);
@@ -77,6 +80,75 @@ const Birthdays = () => {
       setMilestoneErr(err.response?.data?.message || 'Failed to send milestone reminder.');
     } finally { setMilestoneLoad(false); }
   };
+
+  // Milestone birthdays (70/80/90/100) from 30 days ago to 90 days ahead,
+  // built from the same list the Birthday List tab uses.
+  const RECENT_DAYS = 30;
+  const AHEAD_DAYS  = 90;
+  const milestoneList = (() => {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const thisYear = today.getFullYear();
+    const out = [];
+    birthdays.forEach(b => {
+      if (!b.dateOfBirth) return;
+      const dob = new Date(b.dateOfBirth);
+      [thisYear - 1, thisYear, thisYear + 1].forEach(y => {
+        const age = y - dob.getUTCFullYear();
+        if (!MILESTONE_AGES.includes(age)) return;
+        const date = new Date(y, dob.getUTCMonth(), dob.getUTCDate());
+        const diff = Math.round((date - today) / 86400000);
+        if (diff >= -RECENT_DAYS && diff <= AHEAD_DAYS) out.push({ ...b, milestoneAge: age, date, diff });
+      });
+    });
+    return out.sort((a, b) => a.date - b.date);
+  })();
+  const recentMilestones   = milestoneList.filter(m => m.diff < 0).reverse();
+  const todayMilestones    = milestoneList.filter(m => m.diff === 0);
+  const upcomingMilestones = milestoneList.filter(m => m.diff > 0);
+
+  const MilestoneRow = ({ m }) => (
+    <tr className="border-b border-gray-50">
+      <td className="px-4 py-3 font-semibold text-[#001F5B]">{m.fullname}</td>
+      <td className="px-4 py-3 text-gray-500 text-xs">{m.email}</td>
+      <td className="px-4 py-3 text-gray-700">
+        {m.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+      </td>
+      <td className="px-4 py-3">
+        <span className="text-xs bg-[#E30613] text-white px-2 py-0.5 rounded-full font-bold">{m.milestoneAge}</span>
+      </td>
+      <td className="px-4 py-3 font-bold text-sm">
+        {m.diff === 0 ? <span className="text-[#E30613]">Today!</span>
+          : m.diff < 0 ? <span className="text-gray-500">{Math.abs(m.diff)} day{Math.abs(m.diff) !== 1 ? 's' : ''} ago</span>
+          : <span className={m.diff <= 7 ? 'text-amber-600' : 'text-gray-600'}>in {m.diff} day{m.diff !== 1 ? 's' : ''}</span>}
+      </td>
+    </tr>
+  );
+
+  const MilestoneTable = ({ title, rows, empty }) => (
+    <div className="mb-6">
+      <h3 className="text-base font-bold text-[#001F5B] mb-2">
+        {title} <span className="text-xs text-gray-400 font-normal">({rows.length})</span>
+      </h3>
+      {rows.length === 0 ? (
+        <div className="bg-gray-50 rounded-xl px-4 py-4 text-sm text-gray-400">{empty}</div>
+      ) : (
+        <div className="bg-white rounded-2xl shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-[#001F5B] text-white">
+                  {['Name', 'Email', 'Birthday', 'Turns', 'When'].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-xs font-bold whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>{rows.map((m, i) => <MilestoneRow key={`${m._id || m.email}-${i}`} m={m} />)}</tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   const todayBirthdays    = birthdays.filter(b => b.isToday);
   const upcomingBirthdays = birthdays.filter(b => !b.isToday);
@@ -298,6 +370,32 @@ const Birthdays = () => {
             style={{ background: milestoneLoad ? '#9CA3AF' : '#E30613' }}>
             {milestoneLoad ? 'Sending...' : 'Send 4-Day Milestone Alert Now'}
           </button>
+
+          <div className="mt-8 pt-6 border-t border-gray-100">
+            <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+              <h3 className="text-lg font-bold text-[#001F5B]">Milestone Birthdays (70 · 80 · 90 · 100)</h3>
+              <button onClick={() => navigate('/milestonesbirthdays')}
+                className="text-xs font-bold text-[#E30613] hover:underline">
+                Open Milestone Payments →
+              </button>
+            </div>
+            {listError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4">{listError}</div>
+            )}
+            {loadingList ? (
+              <div className="text-center py-8 text-[#001F5B] animate-pulse">Loading milestone birthdays...</div>
+            ) : (
+              <>
+                {todayMilestones.length > 0 && (
+                  <MilestoneTable title="🎉 Today" rows={todayMilestones} empty="" />
+                )}
+                <MilestoneTable title="Recent (last 30 days)" rows={recentMilestones}
+                  empty="No milestone birthdays in the last 30 days." />
+                <MilestoneTable title="Upcoming (next 90 days)" rows={upcomingMilestones}
+                  empty="No milestone birthdays in the next 90 days." />
+              </>
+            )}
+          </div>
 
           <div className="mt-6 pt-5 border-t border-gray-100">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Cron Schedule</p>
