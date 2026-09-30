@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiCheckCircle, FiXCircle, FiMessageSquare } from 'react-icons/fi';
 import axios from "axios";
+import useDataRefresh from '../Hooks/useDataRefresh';
 
 
 
@@ -13,23 +15,21 @@ export const PendingSignups = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Fetch pending signups (with real API + localStorage fallback)
-  useEffect(() => {
-    const fetchPendingUsers = async () => {
-      try {
-        // Parse admin once inside effect (stable reference)
-        const admin = JSON.parse(localStorage.getItem('admin')) || { pendingApprovals: [] };
-        setPendingUsers(admin.pendingApprovals || []);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to load pending signups');
-        setLoading(false);
-        console.error(err);
-      }
-    };
+  // Read pending signups from the cache (re-runs whenever the header refresh finishes)
+  const loadPending = () => {
+    try {
+      const admin = JSON.parse(localStorage.getItem('admin')) || { pendingApprovals: [] };
+      setPendingUsers(admin.pendingApprovals || []);
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to load pending signups');
+      setLoading(false);
+      console.error(err);
+    }
+  };
 
-    fetchPendingUsers();
-  }, []); // Empty dependency: Runs only on mount (no loop)
+  useEffect(() => { loadPending(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useDataRefresh(loadPending);
 
   // Auth check (unchanged, fine as is)
   useEffect(() => {
