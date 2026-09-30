@@ -34,6 +34,8 @@ const AdminActivityLogs = () => {
   const [adminColorMap, setAdminColorMap] = useState({});
   // Every admin that has ever logged an action (from the backend, not just the loaded logs)
   const [adminList,  setAdminList]  = useState([]);
+  // _id -> fullname, built from GET /mobilcreateadmin/all (the source of truth for names)
+  const [adminNames, setAdminNames] = useState({});
   const [totalCount, setTotalCount] = useState(0);
 
   const assignColors = useCallback((logList) => {
@@ -50,12 +52,26 @@ const AdminActivityLogs = () => {
     return map;
   }, [adminColorMap]);
 
-  // Load the list of admins for the dropdown as soon as the page opens
+  // Load every admin (full names) + the admins that have log entries, once on open.
+  // Plain fetch() is used for /all so the global axios interceptor doesn't tag it
+  // with your adminId and add a "getAllAdmins" entry to the logs on every visit.
   useEffect(() => {
+    fetch(`${API_BASE}/mobilcreateadmin/all`)
+      .then(r => r.json())
+      .then(d => {
+        const map = {};
+        (d.admins || []).forEach(a => { map[a._id] = a.fullname; });
+        setAdminNames(map);
+      })
+      .catch(() => { /* names fall back to whatever the log stored */ });
+
     axios.get(`${API_BASE}/adminactivitylogs/admins`)
       .then(res => setAdminList(res.data.admins || []))
       .catch(() => { /* dropdown falls back to a text box */ });
   }, []);
+
+  // Best available display name for an admin id (never shows a raw id if a name exists)
+  const nameFor = (id, storedName) => adminNames[id] || storedName || (id ? `Admin …${String(id).slice(-6)}` : 'Admin');
 
   // Shared fetcher. `everyAdmin` = true ignores all filters and pulls ALL admins' logs.
   const fetchLogs = async (everyAdmin) => {
@@ -116,7 +132,7 @@ const AdminActivityLogs = () => {
       new Date(l.createdAt).toLocaleString('en-GB', {
         day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'
       }),
-      l.adminName || '—',
+      nameFor(l.admin, l.adminName),
       (l.admin || '—').slice(-8), // last 8 chars of ID to save space
       l.title     || '—',
       l.details   ? (l.details.length > 120 ? l.details.slice(0, 117) + '...' : l.details) : '—',
@@ -149,11 +165,12 @@ const AdminActivityLogs = () => {
     doc.save(`EMRAN_Activity_Logs_${new Date().toISOString().slice(0,10)}.pdf`);
   };
 
-  // Admins for the dropdown: backend list first, then anything seen in loaded logs
+  // Admins for the dropdown: everyone from /all first, then anyone else seen in logs
   const uniqueAdmins = [...new Map([
-    ...adminList.map(a => [a.id, { id: a.id, name: a.name }]),
-    ...logs.map(l => [l.admin, { id: l.admin, name: l.adminName }]),
-  ].filter(([id]) => id)).values()];
+    ...Object.entries(adminNames).map(([id, name]) => [id, { id, name }]),
+    ...adminList.map(a => [a.id, { id: a.id, name: nameFor(a.id, a.name) }]),
+    ...logs.map(l => [l.admin, { id: l.admin, name: nameFor(l.admin, l.adminName) }]),
+  ].filter(([id]) => id)).values()].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -207,7 +224,7 @@ const AdminActivityLogs = () => {
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-[#001F5B] focus:outline-none">
                 <option value="">All Admins</option>
                 {uniqueAdmins.map(a => (
-                  <option key={a.id} value={a.id}>{a.name || a.id}</option>
+                  <option key={a.id} value={a.id}>{a.name}</option>
                 ))}
               </select>
             ) : (
@@ -235,7 +252,7 @@ const AdminActivityLogs = () => {
             {Object.entries(adminColorMap).map(([key, cIdx]) => {
               const color  = ADMIN_COLORS[cIdx % ADMIN_COLORS.length];
               const admin  = logs.find(l => (l.admin || l.adminName) === key);
-              const name   = admin?.adminName || key.slice(-8);
+              const name   = nameFor(admin?.admin, admin?.adminName) || key;
               return (
                 <span key={key}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border"
@@ -280,7 +297,7 @@ const AdminActivityLogs = () => {
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <span className="text-xs font-bold px-2.5 py-1 rounded-full"
                       style={{ background: color.badge, color: '#fff' }}>
-                      {log.adminName || log.admin?.slice(-8) || 'Admin'}
+                      {nameFor(log.admin, log.adminName)}
                     </span>
                     <span className="text-xs text-gray-400">
                       {new Date(log.createdAt).toLocaleString('en-GB', {
