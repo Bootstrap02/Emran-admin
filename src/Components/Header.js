@@ -1,4 +1,5 @@
 
+
 // components/Header.js (Admin Header)
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -10,6 +11,7 @@ import {
 } from 'react-icons/fi';
 import axios from 'axios';
 import exxonLogo from '../assets/exxonmobil-logo-white.jpg';
+import { DATA_REFRESHED_EVENT } from '../Hooks/useDataRefresh';
 
 const AdminHeader = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -29,29 +31,40 @@ const AdminHeader = () => {
   }, []);
 
   const handleManualRefresh = async () => {
+    if (isRefreshing) return;
     setIsRefreshing(true);
+    const BASE = 'https://campusbuy-backend-nkmx.onrender.com';
     try {
-      const notifRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenotifications');
-      localStorage.setItem('notifications', JSON.stringify(notifRes.data.notifications || []));
+      // Fire everything in parallel; one failing endpoint must not block the rest.
+      const [notif, events, alerts, superAdmin, users] = await Promise.allSettled([
+        axios.get(`${BASE}/mobilcreatenotifications`),
+        axios.get(`${BASE}/mobilcreatenewsevents`),
+        axios.get(`${BASE}/mobilcreatealert`),
+        axios.get(`${BASE}/mobilcreateadmin/admin`),
+        axios.get(`${BASE}/mobilcreateuser/getusers`),
+      ]);
 
-      const eventsRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatenewsevents');
-      localStorage.setItem('newsevents', JSON.stringify(eventsRes.data.newsEvents || []));
+      const save = (key, result, pick) => {
+        if (result.status === 'fulfilled') {
+          localStorage.setItem(key, JSON.stringify(pick(result.value.data)));
+        } else {
+          console.error(`Refresh failed for "${key}":`, result.reason?.message);
+        }
+      };
 
-      const alertRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreatealert');
-      localStorage.setItem('alerts', JSON.stringify(alertRes.data.alerts || []));
-
-      const adminRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/admin');
-      // FIX: store under 'adminData' so all pages read consistently
-      localStorage.setItem('adminData', JSON.stringify(adminRes.data.admin || {}));
-
-      const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/getusers');
-      localStorage.setItem('users', JSON.stringify(usersRes.data.users || []));
-
-      console.log('Local cache synchronized successfully.');
-    } catch (err) {
-      console.error('Failed to fetch data:', err);
+      save('notifications', notif,  d => d.notifications || []);
+      // Backend returns `newsEvents` on the list route; Login used `newsEvent` — accept both.
+      save('newsevents',    events, d => d.newsEvents || d.newsEvent || []);
+      save('alerts',        alerts, d => d.alerts || []);
+      // The super-admin record (pendingApprovals / paymentApprovals) lives under 'admin',
+      // which is what the Pending + Payment pages read. 'adminData' is the LOGGED-IN admin
+      // and must not be overwritten with the super admin.
+      save('admin',         superAdmin, d => d.admin || {});
+      save('users',         users,  d => d.users || []);
     } finally {
       setIsRefreshing(false);
+      // Tell mounted pages to re-read localStorage and re-render.
+      window.dispatchEvent(new Event(DATA_REFRESHED_EVENT));
     }
   };
 
