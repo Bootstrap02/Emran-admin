@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { legacy_createStore as createStore } from 'redux';
@@ -15,19 +16,22 @@ axios.interceptors.request.use((config) => {
     const admin = JSON.parse(localStorage.getItem('adminData') || 'null');
     const adminId = admin?._id || admin?.id || null;
     if (!adminId) return config;
+    const adminName = admin?.fullname || '';
+
+    // The activity-log endpoint uses adminId as a FILTER, so never inject the
+    // logged-in admin there (that is what limited "all admins" to just yourself).
+    if ((config.url || '').includes('/adminactivitylogs')) return config;
 
     const method = (config.method || 'get').toLowerCase();
 
     if (method === 'get') {
-      config.params = { ...(config.params || {}), adminId };
+      config.params = { adminId, adminName, ...(config.params || {}) };
     } else if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
-      // Don't touch FormData — appending adminId here keeps the multipart body intact
-      if (!config.data.has('adminId')) {
-        config.data.append('adminId', adminId);
-      }
+      if (!config.data.has('adminId')) config.data.append('adminId', adminId);
+      if (adminName && !config.data.has('adminName')) config.data.append('adminName', adminName);
     } else {
-      if (!config.data || typeof config.data !== 'object') config.data = { adminId };
-      else config.data = { ...(config.data || {}), adminId };
+      if (!config.data || typeof config.data !== 'object') config.data = { adminId, adminName };
+      else config.data = { adminId, adminName, ...(config.data || {}) };
     }
   } catch (err) {
     // ignore
