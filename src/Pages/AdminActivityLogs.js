@@ -1,9 +1,10 @@
+
 // Pages/AdminActivityLogs.js
 // Shows activity logs for ALL admins combined
 // Each admin gets a distinct colour so you can visually differentiate actions
 // Filters: any admin, date range, action title
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -31,6 +32,9 @@ const AdminActivityLogs = () => {
   const [error,       setError]       = useState('');
   // Map adminId → colour index (built as logs load)
   const [adminColorMap, setAdminColorMap] = useState({});
+  // Every admin that has ever logged an action (from the backend, not just the loaded logs)
+  const [adminList,  setAdminList]  = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
 
   const assignColors = useCallback((logList) => {
     const map = { ...adminColorMap };
@@ -46,28 +50,47 @@ const AdminActivityLogs = () => {
     return map;
   }, [adminColorMap]);
 
-  const handleQuery = async (e) => {
-    e.preventDefault();
+  // Load the list of admins for the dropdown as soon as the page opens
+  useEffect(() => {
+    axios.get(`${API_BASE}/adminactivitylogs/admins`)
+      .then(res => setAdminList(res.data.admins || []))
+      .catch(() => { /* dropdown falls back to a text box */ });
+  }, []);
+
+  // Shared fetcher. `everyAdmin` = true ignores all filters and pulls ALL admins' logs.
+  const fetchLogs = async (everyAdmin) => {
     setError('');
     setLoading(true);
     try {
-      // No adminId filter — fetch ALL admin activity
-      const params = {};
-      if (startDate)   params.startDate = startDate;
-      if (endDate)     params.endDate   = endDate;
-      if (filterAdmin) params.adminId   = filterAdmin;
+      const params = { limit: 5000 };
+      if (everyAdmin) {
+        params.all = true;
+      } else {
+        if (startDate)   params.startDate = startDate;
+        if (endDate)     params.endDate   = endDate;
+        if (filterAdmin) params.adminId   = filterAdmin;
+        else             params.all       = true;
+      }
 
       const res  = await axios.get(`${API_BASE}/adminactivitylogs`, { params });
       const data = res.data.logs || res.data.data || [];
 
       assignColors(data);
       setLogs(data);
+      setTotalCount(res.data.count ?? data.length);
 
       if (data.length === 0) setError('No logs found for the selected filters.');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch activity logs.');
     } finally {
-      setLoading(false); }
+      setLoading(false);
+    }
+  };
+
+  const handleQuery   = (e) => { e.preventDefault(); fetchLogs(false); };
+  const handleLoadAll = () => {
+    setStartDate(''); setEndDate(''); setFilterAdmin('');
+    fetchLogs(true);
   };
 
   const clearFilters = () => {
@@ -75,6 +98,7 @@ const AdminActivityLogs = () => {
     setEndDate('');
     setFilterAdmin('');
     setLogs([]);
+    setTotalCount(0);
     setError('');
   };
 
@@ -125,10 +149,11 @@ const AdminActivityLogs = () => {
     doc.save(`EMRAN_Activity_Logs_${new Date().toISOString().slice(0,10)}.pdf`);
   };
 
-  // Get unique admins from current logs for filter dropdown
-  const uniqueAdmins = [...new Map(
-    logs.map(l => [l.admin, { id: l.admin, name: l.adminName }])
-  ).values()].filter(a => a.id);
+  // Admins for the dropdown: backend list first, then anything seen in loaded logs
+  const uniqueAdmins = [...new Map([
+    ...adminList.map(a => [a.id, { id: a.id, name: a.name }]),
+    ...logs.map(l => [l.admin, { id: l.admin, name: l.adminName }]),
+  ].filter(([id]) => id)).values()];
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -142,12 +167,18 @@ const AdminActivityLogs = () => {
               All admin actions across the portal — colour-coded by administrator
             </p>
           </div>
-          {logs.length > 0 && (
-            <button onClick={downloadPdf}
-              className="px-6 py-3 bg-[#001F5B] text-white rounded-xl font-bold text-sm hover:bg-[#0A3D6B] transition">
-              Download PDF
+          <div className="flex gap-3 flex-wrap">
+            <button onClick={handleLoadAll} disabled={loading}
+              className="px-6 py-3 bg-[#E30613] text-white rounded-xl font-bold text-sm hover:bg-[#c20511] transition disabled:opacity-60">
+              {loading ? 'Loading...' : 'Load All Admins\' Logs'}
             </button>
-          )}
+            {logs.length > 0 && (
+              <button onClick={downloadPdf}
+                className="px-6 py-3 bg-[#001F5B] text-white rounded-xl font-bold text-sm hover:bg-[#0A3D6B] transition">
+                Download PDF
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Filter form */}
@@ -227,8 +258,8 @@ const AdminActivityLogs = () => {
         {/* Results count */}
         {logs.length > 0 && (
           <p className="text-sm text-gray-500 mb-4">
-            Showing <strong>{logs.length}</strong> log{logs.length !== 1 ? 's' : ''}
-            {uniqueAdmins.length > 0 && ` from ${uniqueAdmins.length} admin${uniqueAdmins.length > 1 ? 's' : ''}`}
+            Showing <strong>{logs.length}</strong>{totalCount > logs.length ? ` of ${totalCount}` : ''} log{logs.length !== 1 ? 's' : ''}
+            {Object.keys(adminColorMap).length > 0 && ` from ${new Set(logs.map(l => l.admin || l.adminName)).size} admin${new Set(logs.map(l => l.admin || l.adminName)).size > 1 ? 's' : ''}`}
           </p>
         )}
 
@@ -282,7 +313,7 @@ const AdminActivityLogs = () => {
           <div className="bg-white rounded-2xl shadow p-16 text-center">
             <div className="text-6xl mb-4">📋</div>
             <h3 className="text-xl font-bold text-[#001F5B] mb-2">No logs loaded yet</h3>
-            <p className="text-gray-500">Select a date range and click Search to view admin activity.</p>
+            <p className="text-gray-500">Click “Load All Admins’ Logs”, or pick filters and click Search.</p>
           </div>
         )}
       </div>
