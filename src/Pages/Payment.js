@@ -1,9 +1,11 @@
 
+
 // src/pages/ConfirmedPayments.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiCheckCircle, FiXCircle, FiMessageSquare } from 'react-icons/fi';
 import axios from "axios";
+import useDataRefresh from '../Hooks/useDataRefresh';
 
 
 const API = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin';
@@ -26,23 +28,21 @@ export const ConfirmedPayments = () => {
     }
   }, [navigate]);
 
-  // Fetch confirmed payments from super admin
-  useEffect(() => {
-    const fetchConfirmedPayments = async () => {
-      try {
-        const superAdmin = JSON.parse(localStorage.getItem('admin')) || { paymentApprovals: [] };
-        setPayments(superAdmin.paymentApprovals);
-        console.log(superAdmin.paymentApprovals);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to load confirmed payments');
-        setLoading(false);
-        console.error(err);
-      }
-    };
+  // Fetch confirmed payments from super admin (cache) — re-read after every header refresh
+  const loadConfirmed = () => {
+    try {
+      const superAdmin = JSON.parse(localStorage.getItem('admin')) || { paymentApprovals: [] };
+      setPayments(superAdmin.paymentApprovals || []);
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to load confirmed payments');
+      setLoading(false);
+      console.error(err);
+    }
+  };
 
-    fetchConfirmedPayments();
-  }, []);
+  useEffect(() => { loadConfirmed(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useDataRefresh(loadConfirmed);
 
   // Handle payment confirmation
   const handleConfirm = async (payment) => {
@@ -217,22 +217,21 @@ export const AllPayments = () => {
       return;
     }
   }, [navigate]);
-  // Fetch all payments (dummy for now — replace with real API)
-  useEffect(() => {
-    const fetchAllPayments = async () => {
-      try {
-        const pendingPayments= JSON.parse(localStorage.getItem("adminData"))
-       await setPayments(pendingPayments.paymentApprovals);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to load payment records');
-        setLoading(false);
-        console.error(err);
-      }
-    };
+  // Payment records live on the super-admin record cached under 'admin'
+  const loadAllPayments = () => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('admin')) || JSON.parse(localStorage.getItem('adminData')) || {};
+      setPayments(cached.paymentApprovals || []);
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to load payment records');
+      setLoading(false);
+      console.error(err);
+    }
+  };
 
-    fetchAllPayments();
-  }, []);
+  useEffect(() => { loadAllPayments(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useDataRefresh(loadAllPayments);
 
   // Action handlers (replace with real API calls later)
   const handleConfirm = async (paymentId) => {
