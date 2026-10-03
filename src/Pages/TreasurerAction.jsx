@@ -14,6 +14,8 @@ const TreasurerAction = () => {
   const [otp,      setOtp]      = useState('');
   const [bankRef,  setBankRef]  = useState('');
   const [note,     setNote]     = useState('');
+  const [bankName, setBankName] = useState('');
+  const [bankAcct, setBankAcct] = useState('');
   const [loading,  setLoading]  = useState(true);
   const [acting,   setActing]   = useState(false);
   const [resending,setResending]= useState(false);
@@ -29,13 +31,26 @@ const TreasurerAction = () => {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // Auto-generated milestone requests don't know the beneficiary's bank yet
+  const bankPending = !!pr && (!pr.beneficiaryBank || pr.beneficiaryBank === 'To be confirmed' ||
+                               !pr.beneficiaryAccount || pr.beneficiaryAccount === 'To be confirmed');
+  // Same rule the server uses: UBA / United Bank of Africa -> UBA desk, anything else -> Zenith desk
+  const effectiveBank = bankPending ? bankName : pr?.beneficiaryBank;
+  const isUba = /\buba\b/i.test(String(effectiveBank || '').replace(/\./g, '')) ||
+                /united bank (of|for) africa/i.test(String(effectiveBank || ''));
+  const desk  = !effectiveBank ? '' : (isUba ? 'UBA' : 'Zenith Bank');
+
   const handleConfirm = async (e) => {
     e.preventDefault();
     if (!otp || otp.length !== 6) { setFeedback({ type: 'error', text: 'Please enter the 6-digit OTP.' }); return; }
+    if (bankPending && (!bankName.trim() || !bankAcct.trim())) {
+      setFeedback({ type: 'error', text: "Please enter the beneficiary's bank name and account number." }); return;
+    }
     setActing(true);
     try {
       await axios.put(`${API}/${id}/treasurer-action`, {
         otp, bankRef, note, adminId: admin._id,
+        ...(bankPending ? { beneficiaryBank: bankName.trim(), beneficiaryAccount: bankAcct.trim() } : {}),
       });
       setDone(true);
       setFeedback({ type: 'success', text: 'Payment confirmed and financial log created. All parties have been notified.' });
@@ -126,10 +141,27 @@ const TreasurerAction = () => {
                   </button>
                 </div>
 
+                {bankPending && (
+                  <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4 space-y-3">
+                    <p className="text-sm font-bold text-amber-800">Beneficiary bank details to be confirmed</p>
+                    <input type="text" value={bankName} onChange={e => setBankName(e.target.value)}
+                      placeholder="Bank name (e.g. UBA, Access Bank)"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-[#001F5B] focus:outline-none" />
+                    <input type="text" value={bankAcct} onChange={e => setBankAcct(e.target.value.replace(/\D/g,'').slice(0,10))}
+                      placeholder="Account number"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-[#001F5B] focus:outline-none" />
+                  </div>
+                )}
+                {desk && (
+                  <p className="text-xs font-semibold text-[#001F5B]">
+                    The payment instruction will be sent to the <span className="text-[#E30613]">{desk}</span> desk.
+                  </p>
+                )}
+
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Bank Reference Number</label>
                   <input type="text" value={bankRef} onChange={e => setBankRef(e.target.value)}
-                    placeholder="UBA transaction reference"
+                    placeholder="Bank transaction reference"
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-[#001F5B] focus:outline-none" />
                 </div>
 
@@ -159,3 +191,4 @@ const TreasurerAction = () => {
 };
 
 export default TreasurerAction;
+
