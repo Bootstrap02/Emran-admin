@@ -1,4 +1,5 @@
 
+
 // src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -12,6 +13,7 @@ import { AllAlerts, AllNewsevents, AllNotifications } from './Pages/Manageinfo';
 import { AllUsers, FindUser, UserEdit, DuesStatus } from './Pages/User';
 import Firstpage from './Pages/Firstpage';
 import AdminActivityLogs from './Pages/AdminActivityLogs';
+import DataQuery from './Pages/DataQuery';
 import Birthdays from './Pages/Birthdays';
 import PrivateRoute from './Components/PrivateRoute';
 import ElectionAdmin from './Pages/ElectionAdmin';
@@ -41,6 +43,7 @@ function App() {
         <Route path="/newsevents/:id" element={<CreateNewsevent />} />
         <Route path="/allnewsevents" element={<AllNewsevents />} />
         <Route path="/admin-activity" element={<PrivateRoute><AdminActivityLogs /></PrivateRoute>} />
+        <Route path="/data-query" element={<PrivateRoute><DataQuery /></PrivateRoute>} />
         <Route path="/birthdays" element={<PrivateRoute><Birthdays /></PrivateRoute>} />
         <Route path="/news-events" element={<PrivateRoute><NewsEvents /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
