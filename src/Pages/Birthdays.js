@@ -1,5 +1,6 @@
 
 
+
 // Pages/Birthdays.js — Admin birthday management
 // Tab 1: Original UI — birthday list table + send button (RESTORED)
 // Tab 2: 4-day milestone reminder (NEW — does not touch Tab 1)
@@ -81,8 +82,8 @@ const Birthdays = () => {
     } finally { setMilestoneLoad(false); }
   };
 
-  // Milestone birthdays (70/80/90/100) coming up in the next 300 days (today included).
-  const MILESTONE_WINDOW_DAYS = 300;
+  // Milestone birthdays (70/80/90/100) coming up in the next 365 days (today included).
+  const MILESTONE_WINDOW_DAYS = 365;
   const milestoneList = (() => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const thisYear = today.getFullYear();
