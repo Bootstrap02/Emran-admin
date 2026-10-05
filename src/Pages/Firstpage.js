@@ -1,3 +1,4 @@
+
 // pages/AdminHome.jsx — COMPLEX ADMIN HOMEPAGE
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -48,6 +49,7 @@ const navigate = useNavigate();
               <NavLink to="/finduser" className="text-[#E30613] font-bold hover:underline">Find a User</NavLink>
               <NavLink to="/sortdues" className="text-[#E30613] font-bold hover:underline">Dues Status</NavLink>
               <NavLink to="/admin-activity" className="text-[#E30613] font-bold hover:underline">Admin Activity Logs</NavLink>
+              <NavLink to="/data-query" className="text-[#E30613] font-bold hover:underline">Data Query</NavLink>
               <NavLink to="/birthdays" className="text-[#E30613] font-bold hover:underline">Birthdays</NavLink>
             </div>
           </div>
