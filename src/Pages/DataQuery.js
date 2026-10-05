@@ -61,7 +61,10 @@ const DataQuery = () => {
   };
 
   // Load head-counts + everyone on first open
-  useEffect(() => { run(EMPTY); /* eslint-disable-next-line */ }, []);
+  useEffect(() => {
+    run(EMPTY);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const reset = () => { setF(EMPTY); run(EMPTY); };
 
@@ -319,3 +322,4 @@ const DataQuery = () => {
 };
 
 export default DataQuery;
+
