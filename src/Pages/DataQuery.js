@@ -1,3 +1,4 @@
+
 // Pages/DataQuery.js
 // Query the member database by status (member / prospective / prospect / deceased / admin),
 // dues, registration, birthdays, age, retirement and more. Results can be downloaded as CSV.
@@ -20,7 +21,7 @@ const LOCATIONS = ['Lagos','QIT/Eket','Port Harcourt/Onne','Bonny','USA','Europe
 const EMPTY = {
   status: '', dues: '', duesYear: String(THIS_YEAR), registration: '', dob: '', birthMonth: '',
   ageMin: '', ageMax: '', retirementYear: '', company: '', location: '', approved: '', verified: '',
-  method: '', hasPhoto: '', debt: '', q: '', sort: 'name', order: 'asc',
+  method: '', hasPhoto: '', debt: '', spouse: '', nextOfKin: '', beneficiary: '', beneficiaryDetails: '', q: '', sort: 'name', order: 'asc',
 };
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
@@ -33,6 +34,18 @@ const Field = ({ label, children }) => (
     {children}
   </div>
 );
+
+// Name with phone / email underneath; "—" when nothing is recorded
+const Person = ({ name, phone, email }) => {
+  if (!name) return <span className="text-gray-400">—</span>;
+  return (
+    <div>
+      <p className="font-semibold text-gray-800">{name}</p>
+      {phone && <p className="text-xs text-gray-500">{phone}</p>}
+      {email && <p className="text-xs text-gray-500 break-all">{email}</p>}
+    </div>
+  );
+};
 
 const DataQuery = () => {
   const navigate = useNavigate();
@@ -79,7 +92,11 @@ const DataQuery = () => {
       ['Retirement Location', u => u.locationOfRetirement], ['Registration Paid', u => (u.registrationPaid ? 'Yes' : 'No')],
       [`Dues ${result.duesYear}`, u => (u.duesPaid ? 'Paid' : 'Unpaid')], ['Debt', u => u.debt],
       ['Signup Approved', u => (u.signupApproved ? 'Yes' : 'No')], ['Staff ID', u => u.staffId], ['Pension ID', u => u.pensionId],
-      ['Address', u => u.address], ['Next of Kin', u => u.nextOfKin], ['Joined', u => fmtDate(u.createdAt)],
+      ['Address', u => u.address],
+      ['Spouse', u => u.spouse], ['Spouse Phone', u => u.spousePhone],
+      ['Next of Kin', u => u.nextOfKin], ['Next of Kin Phone', u => u.nextOfKinPhone], ['Next of Kin Email', u => u.nextOfKinEmail],
+      ['Beneficiary', u => u.beneficiary], ['Beneficiary Phone', u => u.beneficiaryPhone], ['Beneficiary Email', u => u.beneficiaryEmail],
+      ['Joined', u => fmtDate(u.createdAt)],
     ];
     const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const csv = [cols.map(c => esc(c[0])).join(','), ...result.users.map(u => cols.map(c => esc(c[1](u))).join(','))].join('\n');
@@ -178,7 +195,7 @@ const DataQuery = () => {
               <input type="number" value={f.retirementYear} onChange={set('retirementYear')} placeholder="e.g. 2015" className={inputCls} />
             </Field>
             <Field label="Search">
-              <input type="text" value={f.q} onChange={set('q')} placeholder="Name, email, phone, ID" className={inputCls} />
+              <input type="text" value={f.q} onChange={set('q')} placeholder="Name, email, phone, ID, kin..." className={inputCls} />
             </Field>
             <Field label="Sort by">
               <select value={f.sort} onChange={set('sort')} className={inputCls}>
@@ -194,6 +211,38 @@ const DataQuery = () => {
               <select value={f.order} onChange={set('order')} className={inputCls}>
                 <option value="asc">Ascending</option>
                 <option value="desc">Descending</option>
+              </select>
+            </Field>
+          </div>
+
+          <p className="text-xs font-bold text-[#001F5B] uppercase tracking-wide mt-6 mb-2">Family &amp; Next of Kin</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Field label="Spouse">
+              <select value={f.spouse} onChange={set('spouse')} className={inputCls}>
+                <option value="">Any</option>
+                <option value="yes">Has spouse recorded</option>
+                <option value="no">No spouse recorded</option>
+              </select>
+            </Field>
+            <Field label="Next of kin">
+              <select value={f.nextOfKin} onChange={set('nextOfKin')} className={inputCls}>
+                <option value="">Any</option>
+                <option value="yes">Has next of kin</option>
+                <option value="no">No next of kin</option>
+              </select>
+            </Field>
+            <Field label="Beneficiary">
+              <select value={f.beneficiary} onChange={set('beneficiary')} className={inputCls}>
+                <option value="">Any</option>
+                <option value="yes">Has beneficiary</option>
+                <option value="no">No beneficiary</option>
+              </select>
+            </Field>
+            <Field label="Beneficiary details">
+              <select value={f.beneficiaryDetails} onChange={set('beneficiaryDetails')} className={inputCls}>
+                <option value="">Any</option>
+                <option value="complete">Complete (name, email, phone)</option>
+                <option value="incomplete">Incomplete / missing</option>
               </select>
             </Field>
           </div>
@@ -279,7 +328,7 @@ const DataQuery = () => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-[#001F5B] text-white">
-                        {['Name', 'Status', 'Email', 'Phone', 'Date of Birth', 'Age', 'Retired', `Dues ${result.duesYear}`, 'Reg. Fee', ''].map(h => (
+                        {['Name', 'Status', 'Email', 'Phone', 'Date of Birth', 'Age', 'Retired', 'Spouse', 'Next of Kin', 'Beneficiary', `Dues ${result.duesYear}`, 'Reg. Fee', ''].map(h => (
                           <th key={h} className="px-4 py-3 text-left text-xs font-bold whitespace-nowrap">{h}</th>
                         ))}
                       </tr>
@@ -294,6 +343,9 @@ const DataQuery = () => {
                           <td className="px-4 py-3 whitespace-nowrap">{fmtDate(u.dateOfBirth)}</td>
                           <td className="px-4 py-3">{u.age ?? '—'}</td>
                           <td className="px-4 py-3 whitespace-nowrap">{u.retirementYear || '—'}</td>
+                          <td className="px-4 py-3 min-w-[150px]"><Person name={u.spouse} phone={u.spousePhone} /></td>
+                          <td className="px-4 py-3 min-w-[150px]"><Person name={u.nextOfKin} phone={u.nextOfKinPhone} email={u.nextOfKinEmail} /></td>
+                          <td className="px-4 py-3 min-w-[150px]"><Person name={u.beneficiary} phone={u.beneficiaryPhone} email={u.beneficiaryEmail} /></td>
                           <td className="px-4 py-3">
                             <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${u.duesPaid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}`}>
                               {u.duesPaid ? 'Paid' : 'Unpaid'}
@@ -322,4 +374,3 @@ const DataQuery = () => {
 };
 
 export default DataQuery;
-
