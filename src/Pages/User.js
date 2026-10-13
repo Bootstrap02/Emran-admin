@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import useDataRefresh from '../Hooks/useDataRefresh';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -1273,7 +1274,7 @@ export const DuesStatus = () => {
         ? `Paid (₦${u.dues[selectedYear].amount || 0})`
         : 'Unpaid',
       'Due Date': u.dues?.[selectedYear]?.dueDate
-        ? new Date(u.dues[selectedYear].dueDate).toLocaleDateString('en-GB')
+        ? new Date(u.dues[selectedYear].dueDate).toLocaleDateString('en-GB', { timeZone: 'UTC' })
         : '',
       'Registration Paid': u.registration?.payment ? 'Yes' : 'No',
       'Date Joined': u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB') : '',
