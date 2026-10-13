@@ -38,7 +38,8 @@ const Birthdays = () => {
   const fmtMonthDay = (dateStr) => {
     if (!dateStr) return '—';
     const d = new Date(dateStr);
-    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
+    // timeZone UTC: birthdays are calendar days, so they must not shift for viewers in other time zones
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', timeZone: 'UTC' });
   };
 
   // Current age
@@ -46,17 +47,20 @@ const Birthdays = () => {
     if (!dob) return null;
     const today = new Date();
     const b     = new Date(dob);
-    let age = today.getFullYear() - b.getFullYear();
-    const m = today.getMonth() - b.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < b.getDate())) age--;
+    let age = today.getFullYear() - b.getUTCFullYear();
+    const m = today.getMonth() - b.getUTCMonth();
+    if (m < 0 || (m === 0 && today.getDate() < b.getUTCDate())) age--;
     return age;
   };
 
   // Days until next birthday
   const daysUntil = (nextBirthdayStr) => {
     if (!nextBirthdayStr) return null;
-    const today = new Date(); today.setHours(0,0,0,0);
-    const next  = new Date(nextBirthdayStr); next.setHours(0,0,0,0);
+    const t = new Date();
+    const n = new Date(nextBirthdayStr);
+    // both sides as plain calendar days: today (viewer's date) vs the birthday's UTC calendar day
+    const today = Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
+    const next  = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());
     return Math.round((next - today) / 86400000);
   };
 
