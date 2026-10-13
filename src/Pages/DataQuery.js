@@ -25,6 +25,8 @@ const EMPTY = {
 };
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+// Date-only values (birthdays) are UTC calendar days — format in UTC so they never shift with the viewer's time zone
+const fmtDay  = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '—');
 
 const inputCls  = 'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E30613] focus:border-[#E30613] outline-none bg-white';
 
@@ -87,7 +89,7 @@ const DataQuery = () => {
     if (!result?.users?.length) return;
     const cols = [
       ['Name', u => u.fullname], ['Email', u => u.email], ['Phone', u => u.phone],
-      ['Status', u => STATUS_LABELS[u.role] || u.role], ['Date of Birth', u => fmtDate(u.dateOfBirth)], ['Age', u => u.age ?? ''],
+      ['Status', u => STATUS_LABELS[u.role] || u.role], ['Date of Birth', u => fmtDay(u.dateOfBirth)], ['Age', u => u.age ?? ''],
       ['Retirement Year', u => u.retirementYear ?? ''], ['Company at Retirement', u => u.companyAtRetirement],
       ['Retirement Location', u => u.locationOfRetirement], ['Registration Paid', u => (u.registrationPaid ? 'Yes' : 'No')],
       [`Dues ${result.duesYear}`, u => (u.duesPaid ? 'Paid' : 'Unpaid')], ['Debt', u => u.debt],
@@ -340,7 +342,7 @@ const DataQuery = () => {
                           <td className="px-4 py-3">{roleBadge(u.role)}</td>
                           <td className="px-4 py-3 text-gray-500 text-xs">{u.email}</td>
                           <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{u.phone || '—'}</td>
-                          <td className="px-4 py-3 whitespace-nowrap">{fmtDate(u.dateOfBirth)}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">{fmtDay(u.dateOfBirth)}</td>
                           <td className="px-4 py-3">{u.age ?? '—'}</td>
                           <td className="px-4 py-3 whitespace-nowrap">{u.retirementYear || '—'}</td>
                           <td className="px-4 py-3 min-w-[150px]"><Person name={u.spouse} phone={u.spousePhone} /></td>
