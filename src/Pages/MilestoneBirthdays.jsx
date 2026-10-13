@@ -1,3 +1,4 @@
+
 // Pages/MilestoneBirthdays.jsx
 // Searches for EMRAN members with milestone birthdays (70,80,90,100)
 // 60 is NOT a milestone age — removed per EMRAN President's instruction
@@ -69,8 +70,8 @@ const MilestoneBirthdays = () => {
 
         // Age they will turn on their birthday this year
         // e.g. born 1954, birthday in December → turns 72 in Dec 2026
-        const birthdayThisYear = new Date(year, dob.getMonth(), dob.getDate());
-        const age = year - dob.getFullYear();
+        const birthdayThisYear = new Date(year, dob.getUTCMonth(), dob.getUTCDate());   // UTC calendar day: no time-zone drift
+        const age = year - dob.getUTCFullYear();
 
         if (!MILESTONE_AGES.includes(age)) return;
         if (birthdayThisYear >= sunday && birthdayThisYear <= saturday) {
