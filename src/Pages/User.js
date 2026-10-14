@@ -468,14 +468,28 @@ const currentAdmin = JSON.parse(localStorage.getItem('adminData') || '{}');
     if (!selectedImage) return;
     setImageUploading(true);
     try {
-      // Uses the same route as the member signup image upload:
-      // PUT /mobilcreateuser/uploadimages/:userId
+      // Same route the member site's Profile page uses: PUT /mobilcreateuser/upload-fortune-image/:userId
+      // (this page was calling /uploadimages/:id, a route that does not exist on the backend, so the
+      //  request never reached the upload code)
       const formDataImg = new FormData();
       formDataImg.append('images', selectedImage);
-      await axios.put(
-        `https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/uploadimages/${id}`,
+      const imgRes = await axios.put(
+        `https://campusbuy-backend-nkmx.onrender.com/mobilcreateuser/upload-fortune-image/${id}`,
         formDataImg
       );
+
+      // Show the saved photo straight away and keep the cached users list in sync
+      const newImages = Array.isArray(imgRes.data?.image) ? imgRes.data.image : [];
+      if (newImages.length) {
+        setUserData(prev => ({ ...(prev || {}), image: newImages }));
+        setImagePreview(null);
+        try {
+          const cached = JSON.parse(localStorage.getItem('users') || '[]');
+          if (Array.isArray(cached)) {
+            localStorage.setItem('users', JSON.stringify(cached.map(u => (u._id === id ? { ...u, image: newImages } : u))));
+          }
+        } catch (e) { /* cache update is best-effort */ }
+      }
       setSuccessMsg('Profile photo updated successfully!');
       setSelectedImage(null);
       setTimeout(() => setSuccessMsg(''), 3000);
