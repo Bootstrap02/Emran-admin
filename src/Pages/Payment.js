@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiCheckCircle, FiXCircle, FiMessageSquare } from 'react-icons/fi';
 import axios from "axios";
 import useDataRefresh from '../Hooks/useDataRefresh';
+import { AUTHORIZED_ACCOUNT_DUES_ADMIN_IDS } from './User';
 
 
 const API = 'https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin';
@@ -44,6 +45,21 @@ export const ConfirmedPayments = () => {
   useEffect(() => { loadConfirmed(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useDataRefresh(loadConfirmed);
 
+  // Only the Super Admin, Treasurer and President may confirm / reject payments (the server enforces this too)
+  const currentAdmin = (() => { try { return JSON.parse(localStorage.getItem('adminData')) || {}; } catch (e) { return {}; } })();
+  const canConfirmPayments = AUTHORIZED_ACCOUNT_DUES_ADMIN_IDS.includes(String(currentAdmin._id || currentAdmin.id || ''));
+
+  // Keep the cached request list in step with the server after a request is removed
+  const dropFromCache = (userId) => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('admin') || 'null');
+      if (cached && Array.isArray(cached.paymentApprovals)) {
+        cached.paymentApprovals = cached.paymentApprovals.filter(p => String(p.userId) !== String(userId));
+        localStorage.setItem('admin', JSON.stringify(cached));
+      }
+    } catch (e) { /* best-effort */ }
+  };
+
   // Handle payment confirmation
   const handleConfirm = async (payment) => {
     if (!window.confirm(`Confirm payment for ${payment.fullname}?`)) return;
@@ -53,9 +69,16 @@ export const ConfirmedPayments = () => {
       const url = payment.year ? `${API}/approvenextpayment` : `${API}/approvepayment`;
       const response = await axios.put(url, { userId: payment.userId });
       alert(response.data.message || `Payment confirmed for ${payment.fullname}`);
-      setPayments(prev => prev.map(p =>
-        p.userId === payment.userId ? { ...p, status: 'Confirmed' } : p
-      ));
+      if (response.data.requestRemoved) {
+        // Payment was already recorded (manual update) — the server deleted the request, so drop the row
+        setPayments(prev => prev.filter(p => p.userId !== payment.userId));
+        dropFromCache(payment.userId);
+      } else {
+        setPayments(prev => prev.map(p =>
+          p.userId === payment.userId ? { ...p, status: 'Confirmed' } : p
+        ));
+        dropFromCache(payment.userId);
+      }
     } catch (err) {
       const errRes = err.response;
       console.error('Confirm error:', errRes?.data || err.message);
@@ -83,8 +106,9 @@ export const ConfirmedPayments = () => {
 
       alert(response.data.message || `Payment rejected for ${payment.fullname}`);
 
-      // Remove from UI
+      // Remove from UI + cache
       setPayments(prev => prev.filter(p => p.userId !== payment.userId));
+      dropFromCache(payment.userId);
     } catch (err) {
       console.error('Reject error:', err.response?.data || err.message);
       alert(err.response?.data?.message || 'Failed to reject payment');
@@ -168,21 +192,29 @@ export const ConfirmedPayments = () => {
                       </td>
                       <td className="px-6 py-6 whitespace-nowrap text-center">
                         <div className="flex justify-center gap-6">
-                          <button
-                            onClick={() => handleConfirm(payment)}
-                            className="text-green-600 hover:text-green-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-green-50"
-                            title="Confirm Payment"
-                          >
-                            <FiCheckCircle className="text-3xl" />
-                          </button>
+                          {canConfirmPayments ? (
+                            <>
+                              <button
+                                onClick={() => handleConfirm(payment)}
+                                className="text-green-600 hover:text-green-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-green-50"
+                                title="Confirm Payment"
+                              >
+                                <FiCheckCircle className="text-3xl" />
+                              </button>
 
-                          <button
-                            onClick={() => handleReject(payment)}
-                            className="text-red-600 hover:text-red-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-red-50"
-                            title="Reject Payment"
-                          >
-                            <FiXCircle className="text-3xl" />
-                          </button>
+                              <button
+                                onClick={() => handleReject(payment)}
+                                className="text-red-600 hover:text-red-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-red-50"
+                                title="Reject Payment"
+                              >
+                                <FiXCircle className="text-3xl" />
+                              </button>
+                            </>
+                          ) : (
+                            <span className="self-center text-xs font-semibold text-gray-400" title="Only the Super Admin, Treasurer and President can confirm payments">
+                              Restricted
+                            </span>
+                          )}
                               <button 
                               onClick={() => resendWelcomeEmail(payment)}
                             className="text-blue-600 hover:text-blue-800 transition transform hover:scale-125 p-2 rounded-full hover:bg-blue-50" title="Send Message">

@@ -13,6 +13,18 @@ import axios from 'axios';
 // Global axios interceptor to attach adminId to requests (if admin is logged in)
 axios.interceptors.request.use((config) => {
   try {
+    // Send the admin login token to our backend so protected actions (e.g. confirming payments)
+    // can verify WHO is acting. Never sent to other sites.
+    if ((config.url || '').includes('campusbuy-backend')) {
+      const rawToken = localStorage.getItem('adminToken');
+      const adminToken = rawToken ? JSON.parse(rawToken) : null;
+      if (adminToken && !(config.headers && config.headers.Authorization)) {
+        config.headers = { ...(config.headers || {}), Authorization: `Bearer ${adminToken}` };
+      }
+    }
+  } catch (err) { /* ignore */ }
+
+  try {
     const admin = JSON.parse(localStorage.getItem('adminData') || 'null');
     const adminId = admin?._id || admin?.id || null;
     if (!adminId) return config;
