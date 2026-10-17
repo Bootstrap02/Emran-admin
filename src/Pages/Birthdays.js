@@ -295,7 +295,7 @@ const Birthdays = () => {
           <h2 className="text-xl font-bold text-[#001F5B] mb-2">4-Day Milestone Birthday Reminder</h2>
           <p className="text-sm text-gray-500 mb-2">
             Scans all members for milestone birthdays (70, 80, 90, 100) occurring exactly{' '}
-            <strong>4 days from today</strong>. Sends an advance notice to Mrs. Beatrice Atekha,
+            <strong>4 days from today</strong>. Sends an advance notice to Mrs. Beatrice Athekame,
             CC'd to emranannuitants@gmail.com and fxudegbu@gmail.com.
           </p>
           <div className="bg-[#001F5B]/5 border border-[#001F5B]/20 rounded-xl px-4 py-3 text-xs text-[#001F5B] mb-6">
