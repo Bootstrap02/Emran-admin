@@ -36,6 +36,7 @@ const exportToExcel = (users, filename = 'EMRAN_Users') => {
 
     return {
       'Full Name': u.fullname || '',
+      'Surname': u.surname || '',
       'Email': u.email || '',
       'Phone': u.phone || '',
       'Role': u.role || '',
@@ -55,7 +56,7 @@ const exportToExcel = (users, filename = 'EMRAN_Users') => {
   XLSX.utils.book_append_sheet(wb, ws, 'Members');
 
   ws['!cols'] = [
-    { wch: 28 }, { wch: 32 }, { wch: 18 }, { wch: 18 },
+    { wch: 28 }, { wch: 18 }, { wch: 32 }, { wch: 18 }, { wch: 18 },
     { wch: 20 }, { wch: 12 }, { wch: 20 }, { wch: 18 },
     { wch: 50 }, { wch: 22 }, { wch: 16 }, { wch: 16 },
   ];
@@ -94,6 +95,7 @@ export const AllUsers = () => {
     const q = search.toLowerCase();
     return users.filter(u =>
       u.fullname?.toLowerCase().includes(q) ||
+      u.surname?.toLowerCase().includes(q) ||
       u.email?.toLowerCase().includes(q) ||
       u.phone?.includes(q)
     );
@@ -135,7 +137,7 @@ export const AllUsers = () => {
           <div className="relative flex-1">
             <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name, email or phone..."
+              placeholder="Search by name, surname, email or phone..."
               className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#E30613] outline-none" />
           </div>
           <button onClick={() => exportToExcel(filtered, 'EMRAN_All_Users')}
@@ -152,14 +154,14 @@ export const AllUsers = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gradient-to-r from-[#001F5B] to-[#0A3D6B] text-white">
                 <tr>
-                  {['Name', 'Email', 'Phone', `Dues (${currentYear})`, 'Registration', 'Actions'].map(h => (
+                  {['Name', 'Surname', 'Email', 'Phone', `Dues (${currentYear})`, 'Registration', 'Actions'].map(h => (
                     <th key={h} className="px-5 py-4 text-left text-sm font-semibold whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={6} className="px-6 py-16 text-center text-gray-500 text-xl">No users found</td></tr>
+                  <tr><td colSpan={7} className="px-6 py-16 text-center text-gray-500 text-xl">No users found</td></tr>
                 ) : filtered.map((user, i) => {
                   const yearDues = user.dues?.[currentYear];
                   const isPaid = yearDues?.payment === true;
@@ -167,6 +169,7 @@ export const AllUsers = () => {
                     <tr key={user._id} onClick={() => openDetailModal(user)}
                       className={`hover:bg-gray-50 transition cursor-pointer ${i % 2 === 0 ? '' : 'bg-gray-50/50'}`}>
                       <td className="px-5 py-4 font-medium text-gray-900 whitespace-nowrap">{user.fullname}</td>
+                      <td className="px-5 py-4 text-gray-700 text-sm whitespace-nowrap">{user.surname || '—'}</td>
                       <td className="px-5 py-4 text-gray-600 text-sm">{user.email}</td>
                       <td className="px-5 py-4 text-gray-600 text-sm whitespace-nowrap">{user.phone || 'N/A'}</td>
                       <td className="px-5 py-4 text-center">
@@ -220,6 +223,7 @@ export const AllUsers = () => {
                     </div>
                     <div>
                       <p className="font-bold text-[#001F5B] text-base leading-tight">{user.fullname}</p>
+                      {user.surname && <p className="text-xs text-gray-600">Surname: {user.surname}</p>}
                       <p className="text-xs text-gray-500 truncate max-w-[180px]">{user.email}</p>
                     </div>
                   </div>
@@ -265,6 +269,7 @@ export const AllUsers = () => {
             <button onClick={() => setDetailModalOpen(false)} className="absolute top-5 right-5 text-gray-500 hover:text-[#E30613] text-2xl"><FiX /></button>
             <h2 className="text-2xl font-bold text-[#001F5B] mb-6">{selectedDetailUser.fullname}</h2>
             <div className="space-y-4 text-base">
+              <div><strong className="text-gray-600">Surname:</strong> {selectedDetailUser.surname || 'N/A'}</div>
               <div><strong className="text-gray-600">Email:</strong> {selectedDetailUser.email}</div>
               <div><strong className="text-gray-600">Phone:</strong> {selectedDetailUser.phone || 'N/A'}</div>
               <div><strong className="text-gray-600">Role:</strong> {selectedDetailUser.role}</div>
@@ -343,7 +348,7 @@ const currentAdmin = JSON.parse(localStorage.getItem('adminData') || '{}');
   );
   console.log(currentAdmin)
   const [formData, setFormData] = useState({
-    fullname: '', email: '', phone: '', address: '',
+    fullname: '', surname: '', email: '', phone: '', address: '',
     role: 'prospect', position: '', staffId: '', pensionId: '',
     signupApproved: false, signupDisapproved: false, isVerified: false,
     dateOfBirth: '', dateOfRetirement: '', companyAtRetirement: '', locationOfRetirement: '',
@@ -393,6 +398,7 @@ const currentAdmin = JSON.parse(localStorage.getItem('adminData') || '{}');
 
     setFormData({
       fullname: userData.fullname || '',
+      surname: userData.surname || '',
       email: userData.email || '',
       phone: userData.phone || '',
       address: userData.address || '',
@@ -502,9 +508,15 @@ const currentAdmin = JSON.parse(localStorage.getItem('adminData') || '{}');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Surname is required by the model — catch it here with a clear message
+    if (!String(formData.surname || '').trim()) {
+      alert('Surname is required. Please fill it in on the Personal tab.');
+      setActiveTab('basic');
+      return;
+    }
     if (!window.confirm('Save changes?')) return;
     try {
-      const res = await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/updateuser/', { id, ...formData, isAdmin: true });
+      const res = await axios.put('https://campusbuy-backend-nkmx.onrender.com/mobilcreateadmin/updateuser/', { id, ...formData, surname: String(formData.surname).trim(), isAdmin: true });
       // Keep the cached users list in sync so the lists show the new values immediately
       try {
         const saved = res.data?.user;
@@ -667,6 +679,7 @@ const currentAdmin = JSON.parse(localStorage.getItem('adminData') || '{}');
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {[
                     { label: 'Full Name', name: 'fullname' },
+                    { label: 'Surname', name: 'surname' },
                     { label: 'Email', name: 'email', type: 'email' },
                     { label: 'Phone', name: 'phone' },
                     { label: 'Address', name: 'address' },
@@ -1097,6 +1110,7 @@ useEffect(() => {
                 <thead className="bg-gradient-to-r from-[#001F5B] to-[#0A3D6B] text-white">
                   <tr>
                     <th className="px-6 py-5 text-left text-lg font-semibold">Name</th>
+                    <th className="px-6 py-5 text-left text-lg font-semibold">Surname</th>
                     <th className="px-6 py-5 text-left text-lg font-semibold">Email</th>
                     <th className="px-6 py-5 text-left text-lg font-semibold">Phone</th>
                     <th className="px-6 py-5 text-center text-lg font-semibold">Dues/({currentYear})</th>
@@ -1108,6 +1122,7 @@ useEffect(() => {
                   {results.map(user => (
                     <tr key={user._id} onClick={() => openDetailModal(user)} className="hover:bg-gray-50 transition cursor-pointer">
                       <td className="px-6 py-6 whitespace-nowrap font-medium text-gray-900">{user.fullname}</td>
+                      <td className="px-6 py-6 whitespace-nowrap text-gray-700">{user.surname || '—'}</td>
                       <td className="px-6 py-6 whitespace-nowrap text-gray-600">{user.email}</td>
                       <td className="px-6 py-6 whitespace-nowrap text-gray-600">{user.phone || 'N/A'}</td>
                       <td className="px-6 py-6 whitespace-nowrap text-center">
@@ -1171,6 +1186,7 @@ useEffect(() => {
               </div>
 
               <div className="space-y-6 text-lg">
+                <div><strong className="text-gray-700">Surname:</strong> {selectedDetailUser.surname || 'N/A'}</div>
                 <div><strong className="text-gray-700">Email:</strong> {selectedDetailUser.email}</div>
                 <div><strong className="text-gray-700">Phone:</strong> {selectedDetailUser.phone || 'N/A'}</div>
                 <div><strong className="text-gray-700">Role:</strong> {selectedDetailUser.role || 'Unknown'}</div>
@@ -1281,6 +1297,7 @@ export const DuesStatus = () => {
     const label = duesStatus === 'paid' ? 'Paid' : 'Unpaid';
     const rows = filteredUsers.map(u => ({
       'Full Name': u.fullname || '',
+      'Surname': u.surname || '',
       'Email': u.email || '',
       'Phone': u.phone || '',
       'Role': u.role || '',
@@ -1295,7 +1312,7 @@ export const DuesStatus = () => {
     }));
 
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 28 }, { wch: 32 }, { wch: 18 }, { wch: 18 }, { wch: 20 }, { wch: 16 }, { wch: 18 }, { wch: 16 }];
+    ws['!cols'] = [{ wch: 28 }, { wch: 18 }, { wch: 32 }, { wch: 18 }, { wch: 18 }, { wch: 20 }, { wch: 16 }, { wch: 18 }, { wch: 16 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, `${label}_Dues_${selectedYear}`);
     XLSX.writeFile(wb, `EMRAN_${label}_Dues_${selectedYear}_${new Date().toISOString().slice(0, 10)}.xlsx`);
@@ -1359,6 +1376,7 @@ export const DuesStatus = () => {
                 <thead className="bg-gradient-to-r from-[#001F5B] to-[#0A3D6B] text-white">
                   <tr>
                     <th className="px-5 py-4 text-left text-sm font-semibold">Name</th>
+                    <th className="px-5 py-4 text-left text-sm font-semibold">Surname</th>
                     <th className="px-5 py-4 text-left text-sm font-semibold">Email</th>
                     <th className="px-5 py-4 text-left text-sm font-semibold">Phone</th>
                     <th className="px-5 py-4 text-center text-sm font-semibold">Dues {selectedYear}</th>
@@ -1371,6 +1389,7 @@ export const DuesStatus = () => {
                     return (
                       <tr key={user._id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
                         <td className="px-5 py-4 font-medium text-gray-900">{user.fullname}</td>
+                        <td className="px-5 py-4 text-gray-700 text-sm">{user.surname || '—'}</td>
                         <td className="px-5 py-4 text-gray-600 text-sm">{user.email}</td>
                         <td className="px-5 py-4 text-gray-600 text-sm">{user.phone || 'N/A'}</td>
                         <td className="px-5 py-4 text-center">
@@ -1399,6 +1418,7 @@ export const DuesStatus = () => {
                         {yearDues?.payment ? 'Paid' : 'Unpaid'}
                       </span>
                     </div>
+                    {user.surname && <p className="text-xs text-gray-600">Surname: {user.surname}</p>}
                     <p className="text-xs text-gray-500">{user.email}</p>
                     <p className="text-xs text-gray-500">{user.phone || 'No phone'}</p>
                     {yearDues?.amount > 0 && (
