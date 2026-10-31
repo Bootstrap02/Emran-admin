@@ -1,3 +1,4 @@
+
 // Pages/PaymentReview.jsx
 // President review page — when President clicks Approve, OTP modal pops up
 // Secretary review uses the same page via different URL path
@@ -149,7 +150,7 @@ const PaymentReview = () => {
               <div>
                 <h3 className="font-extrabold text-[#001F5B] text-lg">Identity Verification</h3>
                 <p className="text-xs text-gray-500">
-                  An OTP has been sent to the {isSecretary ? "General Secretary's" : "President's"} registered email address
+                  An OTP has been sent to the EMRAN annuitants mailbox. Please obtain the code from there.
                 </p>
               </div>
             </div>
