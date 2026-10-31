@@ -34,11 +34,13 @@ const TreasurerAction = () => {
   // Auto-generated milestone requests don't know the beneficiary's bank yet
   const bankPending = !!pr && (!pr.beneficiaryBank || pr.beneficiaryBank === 'To be confirmed' ||
                                !pr.beneficiaryAccount || pr.beneficiaryAccount === 'To be confirmed');
-  // Same rule the server uses: UBA / United Bank of Africa -> UBA desk, anything else -> Zenith desk
+  // Same rule the server uses (Utils/bankRouting.js): UBA beneficiary -> UBA desk; ANY bank with an amount of
+  // N400,000 or more -> UBA desk; everything else -> Zenith desk
   const effectiveBank = bankPending ? bankName : pr?.beneficiaryBank;
   const isUba = /\buba\b/i.test(String(effectiveBank || '').replace(/\./g, '')) ||
                 /united bank (of|for) africa/i.test(String(effectiveBank || ''));
-  const desk  = !effectiveBank ? '' : (isUba ? 'UBA' : 'Zenith Bank');
+  const isLarge = Number(pr?.amount) >= 400000;
+  const desk  = isLarge ? 'UBA' : (!effectiveBank ? '' : (isUba ? 'UBA' : 'Zenith Bank'));
 
   const handleConfirm = async (e) => {
     e.preventDefault();
@@ -63,7 +65,7 @@ const TreasurerAction = () => {
     setResending(true);
     try {
       await axios.post(`${API}/${id}/resend-otp`);
-      setFeedback({ type: 'success', text: 'New OTP sent to your registered email address.' });
+      setFeedback({ type: 'success', text: 'New OTP sent to the EMRAN annuitants mailbox.' });
     } catch {
       setFeedback({ type: 'error', text: 'Failed to resend OTP.' });
     } finally { setResending(false); }
@@ -124,7 +126,7 @@ const TreasurerAction = () => {
                 </div>
                 <div>
                   <p className="font-bold text-[#001F5B] text-sm">Identity Verification Required</p>
-                  <p className="text-xs text-gray-500">Enter the OTP sent to your registered email address</p>
+                  <p className="text-xs text-gray-500">Enter the OTP sent to the EMRAN annuitants mailbox</p>
                 </div>
               </div>
 
@@ -155,6 +157,7 @@ const TreasurerAction = () => {
                 {desk && (
                   <p className="text-xs font-semibold text-[#001F5B]">
                     The payment instruction will be sent to the <span className="text-[#E30613]">{desk}</span> desk.
+                    {isLarge && !isUba && ' (Payments of ₦400,000 and above are always processed through UBA.)'}
                   </p>
                 )}
 
@@ -191,4 +194,5 @@ const TreasurerAction = () => {
 };
 
 export default TreasurerAction;
+
 
