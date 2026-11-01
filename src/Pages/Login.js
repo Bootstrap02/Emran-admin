@@ -1,3 +1,4 @@
+
 // src/pages/Login.jsx — SIMPLE ADMIN SIGN IN (REAL API)
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -50,7 +51,8 @@ const usersRes = await axios.get('https://campusbuy-backend-nkmx.onrender.com/mo
 
       // Store token & admin data
       localStorage.setItem('adminToken', JSON.stringify(res.data.token));
-      localStorage.setItem('adminData', JSON.stringify(res.data.admin));
+      // keep the id under both names (_id and id) so every page can read it
+      localStorage.setItem('adminData', JSON.stringify({ ...res.data.admin, _id: res.data.admin?._id || res.data.admin?.id }));
 
       // Redirect to admin dashboard
       navigate('/firstpage'); // ← Change this to your actual admin dashboard route
