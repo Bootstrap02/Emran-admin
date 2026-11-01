@@ -1,3 +1,4 @@
+
 // pages/admin/CreateNewsevent.jsx
 // Template-based news & events creator
 // Templates: Birthday, Wedding, Funeral, Obituary, General Event, Custom (Other)
@@ -226,6 +227,12 @@ const TemplateModal = ({ template, adminId, onClose, onSuccess }) => {
       const body  = template.generateBody(fields);
       const category = template.id;
 
+      if (!adminId || adminId === 'undefined') {
+        setError('Your admin session was not found. Please log out and log in again, then retry.');
+        setLoading(false);
+        return;
+      }
+
       // Step 1: Create the news/event
       const res = await axios.post(`${API_BASE}/mobilcreatenewsevents/${adminId}`, {
         title, body, category,
@@ -233,13 +240,11 @@ const TemplateModal = ({ template, adminId, onClose, onSuccess }) => {
       });
       const newsEventId = res.data.newsEvent?._id || res.data._id;
 
-      // Step 2: Upload all images (sequential to preserve order)
+      // Step 2: Upload all images in ONE request (order preserved)
       if (images.length > 0 && newsEventId) {
-        for (const img of images) {
-          const fd = new FormData();
-          fd.append('images', img);
-          await axios.put(`${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`, fd);
-        }
+        const fd = new FormData();
+        images.forEach((img) => fd.append('images', img));
+        await axios.put(`${API_BASE}/mobilcreatenewseventsimage/${newsEventId}`, fd);
       }
 
       // Step 3: Push notification
@@ -333,7 +338,12 @@ const TemplateModal = ({ template, adminId, onClose, onSuccess }) => {
 
 // ── Main Component ──────────────────────────────────────────────────────────
 const NewsEvents = () => {
-  const { id: adminId } = useParams();
+  // This page's route (/news-events) has no :id in the URL, so useParams() gave undefined and the request went to
+  // /mobilcreatenewsevents/undefined. Use the id in the URL if there is one, otherwise the logged-in admin (saved by Login.js).
+  const { id: routeId } = useParams();
+  let storedAdminId;
+  try { storedAdminId = JSON.parse(localStorage.getItem('adminData') || '{}')._id; } catch (e) { storedAdminId = undefined; }
+  const adminId = routeId || storedAdminId;
   const [activeTemplate, setActiveTemplate] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
 
