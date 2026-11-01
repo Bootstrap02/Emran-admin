@@ -22,7 +22,17 @@ const AdminHeader = () => {
   const navigate = useNavigate();
 
   // FIX: use 'adminData' key — same key used by Login, RequestFunds, and all other pages
-  const admin = JSON.parse(localStorage.getItem('adminData') || '{}');
+  const admin = (() => {
+    let a = {};
+    try { a = JSON.parse(localStorage.getItem('adminData') || '{}') || {}; } catch (e) { a = {}; }
+    // The login response names the id "id", but the menu links and payment pages read "_id" -> "undefined" in the URL.
+    // Add _id (and save it back) so already-logged-in admins are fixed without logging in again.
+    if (!a._id && a.id) {
+      a = { ...a, _id: a.id };
+      try { localStorage.setItem('adminData', JSON.stringify(a)); } catch (e) { /* ignore */ }
+    }
+    return a;
+  })();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -279,3 +289,4 @@ const AdminHeader = () => {
 };
 
 export default AdminHeader;
+
