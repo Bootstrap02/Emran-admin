@@ -342,8 +342,8 @@ const NewsEvents = () => {
   // /mobilcreatenewsevents/undefined. Use the id in the URL if there is one, otherwise the logged-in admin (saved by Login.js).
   const { id: routeId } = useParams();
   let storedAdminId;
-  try { storedAdminId = JSON.parse(localStorage.getItem('adminData') || '{}')._id; } catch (e) { storedAdminId = undefined; }
-  const adminId = routeId || storedAdminId;
+  try { const a = JSON.parse(localStorage.getItem('adminData') || '{}'); storedAdminId = a._id || a.id; } catch (e) { storedAdminId = undefined; }
+  const adminId = (routeId && routeId !== 'undefined') ? routeId : storedAdminId;
   const [activeTemplate, setActiveTemplate] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
 
