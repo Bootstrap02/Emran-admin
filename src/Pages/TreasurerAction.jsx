@@ -1,3 +1,4 @@
+
 // pages/admin/TreasurerAction.jsx
 // Treasurer enters OTP and confirms payment execution
 
@@ -34,13 +35,14 @@ const TreasurerAction = () => {
   // Auto-generated milestone requests don't know the beneficiary's bank yet
   const bankPending = !!pr && (!pr.beneficiaryBank || pr.beneficiaryBank === 'To be confirmed' ||
                                !pr.beneficiaryAccount || pr.beneficiaryAccount === 'To be confirmed');
-  // Same rule the server uses (Utils/bankRouting.js): UBA beneficiary -> UBA desk; ANY bank with an amount of
-  // N400,000 or more -> UBA desk; everything else -> Zenith desk
+  // Same rule the server uses (Utils/bankRouting.js): UBA beneficiary -> UBA desk; Zenith beneficiary -> Zenith desk;
+  // any OTHER bank: amount ABOVE N100,000 -> UBA desk, N100,000 or less -> Zenith desk.
   const effectiveBank = bankPending ? bankName : pr?.beneficiaryBank;
   const isUba = /\buba\b/i.test(String(effectiveBank || '').replace(/\./g, '')) ||
                 /united bank (of|for) africa/i.test(String(effectiveBank || ''));
-  const isLarge = Number(pr?.amount) >= 400000;
-  const desk  = isLarge ? 'UBA' : (!effectiveBank ? '' : (isUba ? 'UBA' : 'Zenith Bank'));
+  const isZenith = /\bzenith(bank)?\b/i.test(String(effectiveBank || ''));
+  const isLarge = Number(String(pr?.amount ?? '').replace(/,/g, '')) > 100000;
+  const desk  = !effectiveBank ? '' : (isUba ? 'UBA' : (isZenith ? 'Zenith Bank' : (isLarge ? 'UBA' : 'Zenith Bank')));
 
   const handleConfirm = async (e) => {
     e.preventDefault();
@@ -157,7 +159,10 @@ const TreasurerAction = () => {
                 {desk && (
                   <p className="text-xs font-semibold text-[#001F5B]">
                     The payment instruction will be sent to the <span className="text-[#E30613]">{desk}</span> desk.
-                    {isLarge && !isUba && ' (Payments of ₦400,000 and above are always processed through UBA.)'}
+                    {isUba && ' (UBA beneficiaries are always paid from UBA.)'}
+                    {isZenith && ' (Zenith beneficiaries are always paid from Zenith.)'}
+                    {!isUba && !isZenith && isLarge && ' (Payments to other banks above ₦100,000 go through UBA.)'}
+                    {!isUba && !isZenith && !isLarge && ' (Payments to other banks of ₦100,000 or less go through Zenith.)'}
                   </p>
                 )}
 
@@ -194,5 +199,4 @@ const TreasurerAction = () => {
 };
 
 export default TreasurerAction;
-
 
